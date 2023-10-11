@@ -88,6 +88,7 @@ def calc_erreur_classification(original_data, classified_data, gen_output=False)
     Retourne l'index des éléments différents entre deux vecteurs
     Affiche l'erreur moyenne et la matrice de confusion
     """
+
     # génère le vecteur d'erreurs de classification
     vect_err = np.absolute(original_data - classified_data).astype(bool)
     indexes = np.array(np.where(vect_err))[0]

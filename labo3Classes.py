@@ -21,6 +21,7 @@ def labo_APP2():
     # Changer le flag dans les sections pertinentes pour chaque partie de laboratoire
     if True:
         # TODO Labo L1.E1.3 et L3.E1
+        
         print('\n\n=========================\nDonnées originales\n')
         # Affiche les stats de base
         data3classes.getStats(gen_print=True)
