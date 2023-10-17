@@ -164,7 +164,10 @@ class BayesClassifier:
         # reshape pour que les lignes soient les calculs pour 1 point original, i.e. même disposition que l'array d'entrée
         classProbDensities = np.array(classProbDensities).T
         # TODO problematique: take apriori and cost into consideration! here for risk computation argmax assumes equal costs and apriori
-        predictions = np.argmax(classProbDensities, axis=1).reshape(testDataNSamples, 1)
+        # a change, prendre le argmin car on minimise l'erreur (Zach)
+        classProbDensities = classProbDensities@self.costs*self.apriori
+        predictions = np.argmin(classProbDensities, axis=1).reshape(testDataNSamples, 1)
+        #predictions = np.argmin(classProbDensities)#.reshape(testDataNSamples, 1)
         if np.asarray(expected_labels1array).any():
             errors_indexes = an.calc_erreur_classification(expected_labels1array, predictions, gen_output)
         else:
@@ -207,7 +210,8 @@ class PPVClassifier:
         # TODO L2.E3.1 Compléter la logique pour utiliser la librairie ici
         # le 1 est suspect et il manque des arguments
         self.n_classes, _, self.representationDimensions = np.asarray(data2train.dataLists).shape
-        self.kNN = KNN(1)  # minkowski correspond à distance euclidienne lorsque le paramètre p = 2
+        self.kNN = KNN(n_neighbors=n_neighbors,metric=metric,p=2)
+        # minkowski correspond à distance euclidienne lorsque le paramètre p = 2 #KNN -> Classe de KNeighborsClassifier
         # Exécute un clustering pour calculer les représentants de classe si demandés
         if useKmean:
             assert n_represantants >= n_neighbors
@@ -278,8 +282,8 @@ class KMeanAlgo:
         self.cluster_labels = np.zeros((n_representants * self.n_classes, 1))
         for i in range(self.n_classes):  # itère sur l'ensemble des classes
             # TODO L2.E3.3 compléter la logique pour utiliser la librairie ici
-            # encore une fois le 1 est suspect
-            self.kmeans_on_each_class.append(KM(1, n_init='auto'))
+
+            self.kmeans_on_each_class.append(KM(n_clusters=n_representants, n_init='auto'))
             self.kmeans_on_each_class[i].fit(np.array(data2train.dataLists[i]))
             self.cluster_centers.append(self.kmeans_on_each_class[i].cluster_centers_)
             self.cluster_labels[range(n_representants * i, n_representants * (i + 1))] = \

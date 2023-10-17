@@ -497,10 +497,14 @@ def viewEllipse(data, ax, scale=1, facecolor='none', edgecolor='red', **kwargs):
     retourne l'objet Ellipse créé
     """
     moy, cov, lambdas, vectors = calcModeleGaussien(data)
+
+
+
     # TODO L3.E1.1 Remplacer les valeurs bidons par les bons paramètres à partir des stats ici
     # tous les 1 sont suspects
-    ellipse = Ellipse((1, 1), width=2 * np.sqrt(1) * scale, height=2 * np.sqrt(1) * scale,
-                      angle=-np.degrees(1), facecolor=facecolor,
+
+    ellipse = Ellipse(moy, width=np.sqrt(lambdas[0])*2, height=np.sqrt(lambdas[1])*2,
+                      angle=-np.degrees(np.arctan(vectors[0][1]/vectors[0][0])), facecolor=facecolor, #sus
                       edgecolor=edgecolor, linewidth=2, **kwargs)
     return ax.add_patch(ellipse)
 
