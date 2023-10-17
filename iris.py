@@ -49,7 +49,6 @@ from sklearn.model_selection import train_test_split as ttsplit
 import helpers.analysis as an
 import helpers.classifiers as classifiers
 
-
 def main():
     # Load iris data set from file
     # Attributes are: petal length, petal width, sepal length, sepal width
@@ -63,13 +62,14 @@ def main():
     C1 = data[np.where(target_decode == 0)]
     C2 = data[np.where(target_decode == 1)]
     C3 = data[np.where(target_decode == 2)]
+    #C4 = data[np.where(target_decode == 3)]
     an.calcModeleGaussien(C1, '\nClasse versicolor')
     an.calcModeleGaussien(C2, '\nClasse virginica')
     an.calcModeleGaussien(C3, '\nClasse setose')
 
     # Show the 3D projection of the data
     # TODO L2.E3.1 Observez si différentes combinaisons de dimensions sont discriminantes
-    data3D = data[:, 1:4]
+    data3D = data[:, 0:3]
     an.view3D(data3D, target_decode, 'dims 1 2 3')
 
     # TODO Problématique Ici on prend un raccourci avec PCA, mais dans la problématique on demande d'utiliser
@@ -77,9 +77,11 @@ def main():
     pca3 = PCA(n_components=3)
     pca3.fit(data)
     data3D = pca3.transform(data)
+
     C1p3 = pca3.transform(C1)
     C2p3 = pca3.transform(C2)
     C3p3 = pca3.transform(C3)
+
     an.view3D(data3D, target_decode, 'IRIS dataset (3D projection)')
     an.calcModeleGaussien(data3D, '\nPCA 3d')
     an.calcModeleGaussien(C1p3, '\nC1p 3d')
@@ -101,9 +103,16 @@ def main():
     # TODO : Apply any relevant transformation to the data
     # TODO L2.E3.1 Conservez les dimensions qui vous semblent appropriées et décorrélées-les au besoin
     # (e.g. filtering, normalization, dimensionality reduction)
-    data, minmax = an.scaleData(data)
+    data, minmax = an.scaleData(data[:,[1,2,3]]) # on normalize
 
     # TODO L2.E3.4
+   # shuffledTrainData, shuffledTrainLabels, shuffledValidData, shuffledValidLabels = an.splitDataNN(3,data,target)
+    # ["versicolor","virginica","setose"]
+    #training_data = shuffledTrainData
+    #validation_data = shuffledValidData
+    #training_target = shuffledTrainLabels
+    #validation_target = shuffledValidLabels
+
     training_data = data
     validation_data = []
     training_target = target
@@ -112,20 +121,33 @@ def main():
     # Create neural network
     # TODO L2.E3.3  Tune the number and size of hidden layers
     model = Sequential()
-    model.add(Dense(units=3, activation='linear',
+    model.add(Dense(units=3, activation='tanh',
                     input_shape=(data.shape[-1],)))
-    model.add(Dense(units=target.shape[-1], activation='linear'))
+    model.add(Dense(units=10, activation='tanh',
+                    input_shape=(data.shape[-1],)))
+    model.add(Dense(units=10, activation='tanh',
+                    input_shape=(data.shape[-1],)))
+    model.add(Dense(units=10, activation='tanh',
+                    input_shape=(data.shape[-1],)))
+    model.add(Dense(units=10, activation='tanh',
+                    input_shape=(data.shape[-1],)))
+    model.add(Dense(units=10, activation='tanh',
+                    input_shape=(data.shape[-1],)))
+    #model.add(Dense(units=40, activation='tanh',
+    #                input_shape=(data.shape[-1],)))
+    model.add(Dense(units=target.shape[-1], activation='sigmoid')) #
+
     print(model.summary())
 
     # Define training parameters
     # TODO L2.E3.3 Tune the training parameters
-    model.compile(optimizer=SGD(learning_rate=0.001, momentum=0.01), loss='mse')
+    model.compile(optimizer=SGD(learning_rate=0.1, momentum=0.01), loss='mse')
 
     # Perform training
-    callback_list = []  # TODO Labo: callbacks
+    #callback_list = [callback_xd("xd")]#[callback_xd()]  # TODO Labo: callbacks
     # TODO L2.E3.3  Tune the training hyperparameters
-    model.fit(training_data, training_target, batch_size=len(data), verbose=0,
-              epochs=10, shuffle=True, callbacks=callback_list)  # TODO Labo: ajouter les arguments pour le validation set
+    model.fit(training_data, training_target, batch_size=len(data), verbose=1,
+              epochs=5000, shuffle=True)  # TODO Labo: ajouter les arguments pour le validation set
 
     # Save trained model to disk
     model.save('saves'+os.sep+'iris.keras')

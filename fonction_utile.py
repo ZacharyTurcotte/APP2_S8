@@ -1,7 +1,8 @@
 #fichier avec des fonction qui peuvent être utile
 
-import cv2
 import numpy as np
+from skimage import io as skiio
+import os
 
 
 def distance_n_dim(data,dim):

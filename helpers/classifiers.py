@@ -423,7 +423,7 @@ class NNClassifier:
         assert testinputDimensions == self.inputDimensions
         if np.asarray(expected_labels1array).any():
             if savename:
-                tempencoded = self.encoder.fit_transform(np.array(expected_labels1array).reshape(-1, 1))
+                tempencoded = self.encoder.fit_transform(np.array(expected_labels1array).reshape(-1, 1)) #deja fait
                 _, testoutputDimensions = np.asarray(tempencoded).shape
                 assert testoutputDimensions == self.outputDimensions  # ensure minimal compatibility, not a very strict test
                 _, self.outputDimensions = np.asarray(expected_labels1array).shape

@@ -68,6 +68,9 @@ class ImageCollection:
     def get_samples(self, N):
         return np.sort(random.sample(range(np.size(self.image_list, 0)), N))
 
+    def get_select(self,index):
+        return index
+
     def generateHistogram(self, image, n_bins=256):
         # Construction des histogrammes
         # 1 histogram per color channel
@@ -107,7 +110,15 @@ class ImageCollection:
             else:
                 im = skiio.imread(self.image_folder + os.sep + self.image_list[indexes[i]])
             ax2[i].imshow(im)
+    def get_color_info(self,idx):
+        imageRGB = skiio.imread(
+                    self.image_folder + os.sep + self.image_list[idx])
+        Lab = skic.rgb2lab(imageRGB)
+        HVS = skic.rgb2hsv(imageRGB)
 
+
+
+        return imageRGB,Lab,HVS
     def view_histogrammes(self, indexes):
         """
         Affiche les histogrammes de couleur de quelques images
