@@ -131,8 +131,15 @@ def creer_hist2D(data, title='', nbinx=15, nbiny=15, view=False):
     deltax = (np.max(x) - np.min(x)) / nbinx
     deltay = (np.max(y) - np.min(y)) / nbiny
 
+    bin_x = np.zeros(nbinx)
+    bin_y = np.zeros(nbiny)
+
+    for i in range(nbinx):
+        bin_x[i] = np.min(x)+deltax*i
+        bin_y[i] = np.min(y)+deltay*i
+
     # TODO L3.S2.1: remplacer les valeurs bidons par la bonne logique ici
-    hist, xedges, yedges = np.histogram2d([1, 1], [1, 1], bins=[1, 1]) # toutes ces valeurs sont n'importe quoi
+    hist, xedges, yedges = np.histogram2d(data[:,0],data[:,1], bins=[bin_x, bin_y]) # toutes ces valeurs sont n'importe quoi
     # normalise par la somme (somme de densité de prob = 1)
     histsum = np.sum(hist)
     hist = hist / histsum

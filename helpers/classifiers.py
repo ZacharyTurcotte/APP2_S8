@@ -104,9 +104,13 @@ class histProbDensity:
     Predict à part -> computeProbaility
     """
     def __init__(self, data2train, title='', view=False):
-        _, self.representationDimensions = np.asarray(data2train).shape
+        _, _, self.representationDimensions = np.asarray(data2train).shape
         self.extent = data2train.extent
         # TODO problématique: modifier la modélisation pour fonctionner avec une dimensionalité plus élevée
+
+        for i in range(self.representationDimensions):
+            print("xd")
+
         self.hist, self.xedges, self.yedges = an.creer_hist2D(data2train, title=title, view=view)
 
     def computeProbability(self, testdata1array):
@@ -129,10 +133,11 @@ class BayesClassifier:
     def __init__(self, data2trainLists, probabilitydensityType=GaussianProbDensity, apriori=None, costs=None):
         """
         data2trainLists: correspond au format de listes de ClassificationData()
-        probailitydensityType: pointeur à une des fonctions de probabilité voir ci-dessus
+        probailitydensityType: pointeur à une des fonctions de probabilité voir ci-dessush
         """
         self.densities = []  # Liste des densités de prob de chaque classe
         self.n_classes, _, self.representationDimensions = np.asarray(data2trainLists).shape
+        #self.histo = histProbDensity(data2trainLists,title="histo 3D")
         if apriori:
             assert len(apriori) == self.n_classes
             self.apriori = np.array(apriori)

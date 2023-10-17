@@ -21,7 +21,7 @@ import keras as K
 def labo_APP2():
     data3classes = ClassificationData()
     # Changer le flag dans les sections pertinentes pour chaque partie de laboratoire
-    if False:
+    if True:
         # TODO Labo L1.E1.3 et L3.E1
         coefficent = helpers.classifiers.get_gaussian_borders(data3classes.dataLists)
         extent = an.Extent(-8,10,-8,10)
@@ -33,7 +33,7 @@ def labo_APP2():
         #data3classes.getStats()
         data3classes.getBorders(view=True)
         # exemple d'une densité de probabilité arbitraire pour 1 classe
-        an.creer_hist2D(data3classes.dataLists[0], 'C1', view=True)
+        an.creer_hist2D(data3classes.dataLists[0], 'C1', view=True,nbinx=30,nbiny=30)
 
     if False:
         # Décorrélation
@@ -84,7 +84,6 @@ def labo_APP2():
 
     if True:  # TODO L3.E3
         # Exemple de classification bayésienne
-        #apriori = [[1/3,0,0], [0,1/3,0], [0,0,1/3]]
         apriori = [1/3,1/3,1/3]
         cost = [[0, 1, 1], [1, 0, 1], [1, 1, 0]] # le cost nous permet d'avoir du control sur les frontières.
         # Bayes gaussien les apriori et coûts ne sont pas considérés pour l'instant
