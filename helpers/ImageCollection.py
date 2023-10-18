@@ -111,14 +111,51 @@ class ImageCollection:
                 im = skiio.imread(self.image_folder + os.sep + self.image_list[indexes[i]])
             ax2[i].imshow(im)
     def get_color_info(self,idx):
-        imageRGB = skiio.imread(
-                    self.image_folder + os.sep + self.image_list[idx])
-        Lab = skic.rgb2lab(imageRGB)
-        HVS = skic.rgb2hsv(imageRGB)
+
+        for i in range(len(idx)):
+            imageRGB = skiio.imread(self.image_folder + os.sep + self.image_list[idx[i]])
+            imageLab = skic.rgb2lab(imageRGB)
+            imageHVS = skic.rgb2hsv(imageRGB)
+
+        return imageRGB,imageLab,imageHVS
+    def classify(self,idx):
+        if 0 <= idx < 360:
+            return 0
+        elif 360 <= idx < 688:
+            return 1
+        else:
+            return 2
+    def get_rgb_lab_hsv_mean(self,idx):
+        mean_rgb = np.zeros((len(idx),3))
+        mean_lab = np.zeros((len(idx), 3))
+        mean_hsv = np.zeros((len(idx), 3))
+        target = np.zeros((len(idx)),dtype=int)
+        for i in range(len(idx)):
+            imageRGB = np.array(skiio.imread(self.image_folder + os.sep + self.image_list[idx[i]]))
+            imageLab = np.array(skic.rgb2lab(imageRGB))
+            imageHVS = np.array(skic.rgb2hsv(imageRGB))
+
+            imageRGB = imageRGB.reshape(256*256,3)
+            imageLab = imageLab.reshape(256*256,3)
+            imageHVS = imageHVS.reshape(256*256,3)
+
+            mean_rgb[i,0] = np.mean(imageRGB[:,0])
+            mean_rgb[i,1] = np.mean(imageRGB[:,1])
+            mean_rgb[i,2] = np.mean(imageRGB[:,2])
+
+            mean_lab[i,0] = np.mean(imageLab[:,0])
+            mean_lab[i,1] = np.mean(imageLab[:,1])
+            mean_lab[i,2] = np.mean(imageLab[:,2])
+
+            mean_hsv[i,0] = np.mean(imageHVS[:,0])
+            mean_hsv[i,1] = np.mean(imageHVS[:,1])
+            mean_hsv[i,2] = np.mean(imageHVS[:,2])
+
+            target[i] = self.classify(idx[i])
 
 
+        return mean_rgb, mean_lab, mean_hsv, target
 
-        return imageRGB,Lab,HVS
     def view_histogrammes(self, indexes):
         """
         Affiche les histogrammes de couleur de quelques images

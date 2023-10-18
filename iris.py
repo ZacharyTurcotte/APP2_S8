@@ -71,7 +71,7 @@ def main():
     # TODO L2.E3.1 Observez si différentes combinaisons de dimensions sont discriminantes
     data3D = data[:, 0:3]
     an.view3D(data3D, target_decode, 'dims 1 2 3')
-
+    plt.show()
     # TODO Problématique Ici on prend un raccourci avec PCA, mais dans la problématique on demande d'utiliser
     # les techniques vues au labo1
     pca3 = PCA(n_components=3)
@@ -95,6 +95,7 @@ def main():
     C2p2 = pca2.transform(C2)
     C3p2 = pca2.transform(C3)
     an.view_classes([C1p2, C2p2, C3p2], an.Extent(ptList=data2D))
+    plt.show()
     an.calcModeleGaussien(data2D, '\nPCA')
     an.calcModeleGaussien(C1p2, '\nC1p 2D')
     an.calcModeleGaussien(C2p2, '\nC2p 2D')

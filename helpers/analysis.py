@@ -379,8 +379,7 @@ def view3D(data3D, targets, title):
                        [0.0, 1.0, 0.0],  # Green
                        [0.0, 0.0, 1.0]])  # Blue
     c = colors[targets]
-
-    fig = plt.figure(figsize=(8, 8))
+    fig = plt.figure(1,figsize=(8, 8))
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(data3D[:, 0], data3D[:, 1], data3D[:, 2], s=10.0, c=c, marker='x')
     ax.set_title(title)

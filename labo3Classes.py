@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import helpers.classifiers
 from helpers.ClassificationData import ClassificationData
 import helpers.analysis as an
+
 import helpers.classifiers as classifiers
 from sklearn.preprocessing import OneHotEncoder
 
@@ -19,6 +20,7 @@ import keras as K
 
 ##########################################
 def labo_APP2():
+
     data3classes = ClassificationData()
     # Changer le flag dans les sections pertinentes pour chaque partie de laboratoire
     if True:
@@ -34,7 +36,7 @@ def labo_APP2():
         data3classes.getBorders(view=True)
         # exemple d'une densité de probabilité arbitraire pour 1 classe
         an.creer_hist2D(data3classes.dataLists[0], 'C1', view=True,nbinx=30,nbiny=30)
-
+        an.view_classes()
     if False:
         # Décorrélation
         # TODO Labo L1.E3.5
@@ -82,7 +84,7 @@ def labo_APP2():
                                                useKmean=True, n_representants=9,
                                                gen_output=True, view=True)
 
-    if True:  # TODO L3.E3
+    if False:  # TODO L3.E3
         # Exemple de classification bayésienne
         apriori = [1/3,1/3,1/3]
         cost = [[0, 1, 1], [1, 0, 1], [1, 1, 0]] # le cost nous permet d'avoir du control sur les frontières.
