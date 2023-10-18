@@ -19,6 +19,8 @@ import numpy as np
 import os
 import glob
 import random
+import cv2
+import time
 from enum import IntEnum, auto
 
 from skimage import color as skic
@@ -46,7 +48,7 @@ class ImageCollection:
         self.target = []
         self.all_images_loaded = False
         self.images = []
-
+        self.nb_edges = []
         # Crée un array qui contient toutes les images
         # Dimensions [980, 256, 256, 3]
         #            [Nombre image, hauteur, largeur, RGB]
@@ -98,6 +100,19 @@ class ImageCollection:
     def get_samples(self, N):
         return np.sort(random.sample(range(np.size(self.image_list, 0)), N))
 
+    def get_edge(self,idx):
+        debut = time.time()
+        for i in range(len(idx)):
+            grayscale = cv2.cvtColor(self.images[idx[i]], cv2.COLOR_BGR2GRAY)
+            #cv2.imshow('Grayscale', grayscale)
+            edges = cv2.Canny(grayscale, 200, 300)
+            #plt.figure(2*i)
+            #plt.imshow(edges, cmap='gray')
+            #plt.figure(2*i+1)
+            #plt.imshow(self.images[idx[i]])
+            self.nb_edges.append(np.sum(edges))
+        #plt.show()
+        print(time.time() - debut)
     def get_select(self,index):
         return index
 
