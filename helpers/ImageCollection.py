@@ -43,7 +43,7 @@ class ImageCollection:
         image_list = os.listdir(self.image_folder)
         # Filtrer pour juste garder les images
         self.image_list = [i for i in image_list if '.jpg' in i]
-
+        self.target = []
         self.all_images_loaded = False
         self.images = []
 
@@ -58,13 +58,43 @@ class ImageCollection:
         for i in image_list:
             if 'coast' in i:
                 self.labels.append(ImageCollection.imageLabels.coast)
+                self.target.append(0)
             elif 'forest' in i:
                 self.labels.append(ImageCollection.imageLabels.forest)
+                self.target.append(1)
             elif 'street' in i:
                 self.labels.append(ImageCollection.imageLabels.street)
+                self.target.append(2)
             else:
                 raise ValueError(i)
 
+        # calculate rgb, lab, hsv
+        self.rgb = []
+        self.lab = []
+        self.hsv = []
+
+        # calculate means
+        self.mean_rgb = []
+        self.mean_lab = []
+        self.mean_hsv = []
+
+        # calculate stds
+        self.std_rgb = []
+        self.std_lab = []
+        self.std_hsv = []
+
+        for i in range(len(self.images)):
+            self.get_color_info(self.images[i])
+            self.get_rgb_lab_hsv_mean(self.images[i])
+            self.get_rgb_lab_hsv_std(self.images[i])
+
+        self.mean_rgb = np.array(self.mean_rgb)
+        self.mean_lab = np.array(self.mean_lab)
+        self.mean_hsv = np.array(self.mean_hsv)
+
+        self.std_rgb = np.array(self.std_rgb)
+        self.std_lab = np.array(self.std_lab)
+        self.std_hsv = np.array(self.std_hsv)
     def get_samples(self, N):
         return np.sort(random.sample(range(np.size(self.image_list, 0)), N))
 
@@ -110,14 +140,16 @@ class ImageCollection:
             else:
                 im = skiio.imread(self.image_folder + os.sep + self.image_list[indexes[i]])
             ax2[i].imshow(im)
-    def get_color_info(self,idx):
+    def get_color_info(self,image):
 
-        for i in range(len(idx)):
-            imageRGB = skiio.imread(self.image_folder + os.sep + self.image_list[idx[i]])
-            imageLab = skic.rgb2lab(imageRGB)
-            imageHVS = skic.rgb2hsv(imageRGB)
+        imageRGB = image
+        imageLab = skic.rgb2lab(image)
+        imageHVS = skic.rgb2hsv(image)
 
-        return imageRGB,imageLab,imageHVS
+        self.rgb.append(imageRGB)
+        self.lab.append(imageLab)
+        self.hsv.append(imageHVS)
+
     def classify(self,idx):
         if 0 <= idx < 360:
             return 0
@@ -125,36 +157,66 @@ class ImageCollection:
             return 1
         else:
             return 2
-    def get_rgb_lab_hsv_mean(self,idx):
-        mean_rgb = np.zeros((len(idx),3))
-        mean_lab = np.zeros((len(idx), 3))
-        mean_hsv = np.zeros((len(idx), 3))
-        target = np.zeros((len(idx)),dtype=int)
-        for i in range(len(idx)):
-            imageRGB = np.array(skiio.imread(self.image_folder + os.sep + self.image_list[idx[i]]))
-            imageLab = np.array(skic.rgb2lab(imageRGB))
-            imageHVS = np.array(skic.rgb2hsv(imageRGB))
 
-            imageRGB = imageRGB.reshape(256*256,3)
-            imageLab = imageLab.reshape(256*256,3)
-            imageHVS = imageHVS.reshape(256*256,3)
+    def get_rgb_lab_hsv_mean(self, image):
 
-            mean_rgb[i,0] = np.mean(imageRGB[:,0])
-            mean_rgb[i,1] = np.mean(imageRGB[:,1])
-            mean_rgb[i,2] = np.mean(imageRGB[:,2])
+        mean_rgb = np.zeros((1,3))
+        mean_lab = np.zeros((1,3))
+        mean_hsv = np.zeros((1,3))
 
-            mean_lab[i,0] = np.mean(imageLab[:,0])
-            mean_lab[i,1] = np.mean(imageLab[:,1])
-            mean_lab[i,2] = np.mean(imageLab[:,2])
+        imageRGB = np.array(self.rgb[-1])
+        imageLab = np.array(self.lab[-1])
+        imageHVS = np.array(self.hsv[-1])
 
-            mean_hsv[i,0] = np.mean(imageHVS[:,0])
-            mean_hsv[i,1] = np.mean(imageHVS[:,1])
-            mean_hsv[i,2] = np.mean(imageHVS[:,2])
+        imageRGB = imageRGB.reshape(256*256,3)
+        imageLab = imageLab.reshape(256*256,3)
+        imageHVS = imageHVS.reshape(256*256,3)
 
-            target[i] = self.classify(idx[i])
+        mean_rgb[0,0] = np.mean(imageRGB[:,0])
+        mean_rgb[0,1] = np.mean(imageRGB[:,1])
+        mean_rgb[0,2] = np.mean(imageRGB[:,2])
 
+        mean_lab[0,0] = np.mean(imageLab[:,0])
+        mean_lab[0,1] = np.mean(imageLab[:,1])
+        mean_lab[0,2] = np.mean(imageLab[:,2])
 
-        return mean_rgb, mean_lab, mean_hsv, target
+        mean_hsv[0,0] = np.mean(imageHVS[:,0])
+        mean_hsv[0,1] = np.mean(imageHVS[:,1])
+        mean_hsv[0,2] = np.mean(imageHVS[:,2])
+
+        self.mean_rgb.append(mean_rgb)
+        self.mean_lab.append(mean_lab)
+        self.mean_hsv.append(mean_hsv)
+
+    def get_rgb_lab_hsv_std(self, image):
+
+        std_rgb = np.zeros((1, 3))
+        std_lab = np.zeros((1, 3))
+        std_hsv = np.zeros((1, 3))
+
+        imageRGB = np.array(self.rgb[-1])
+        imageLab = np.array(self.lab[-1])
+        imageHVS = np.array(self.hsv[-1])
+
+        imageRGB = imageRGB.reshape(256 * 256, 3)
+        imageLab = imageLab.reshape(256 * 256, 3)
+        imageHVS = imageHVS.reshape(256 * 256, 3)
+
+        std_rgb[0, 0] = np.std(imageRGB[:, 0])
+        std_rgb[0, 1] = np.std(imageRGB[:, 1])
+        std_rgb[0, 2] = np.std(imageRGB[:, 2])
+
+        std_lab[0, 0] = np.std(imageLab[:, 0])
+        std_lab[0, 1] = np.std(imageLab[:, 1])
+        std_lab[0, 2] = np.std(imageLab[:, 2])
+
+        std_hsv[0, 0] = np.std(imageHVS[:, 0])
+        std_hsv[0, 1] = np.std(imageHVS[:, 1])
+        std_hsv[0, 2] = np.std(imageHVS[:, 2])
+
+        self.std_rgb.append(std_rgb)
+        self.std_lab.append(std_lab)
+        self.std_hsv.append(std_hsv)
 
     def view_histogrammes(self, indexes):
         """
