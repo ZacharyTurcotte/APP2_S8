@@ -18,11 +18,13 @@ def problematique_APP2():
     # Génère une liste de N images, les visualise et affiche leur histo de couleur
     # TODO: voir L1.E4 et problématique
     print("xd")
-    if False:
+    im_list = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dtype=int) + 100
+    images = ImageCollection(im_list)
+    if True:
         idx = np.arange(0, 980, 1)
-        images.get_edge(idx)
+        images.get_edge()
         data = images.nb_edges
-        data_to_view = np.zeros((980, 3))
+        data_to_view = np.zeros((images.nb_images, 3))
         images.count_rgb_pixel()
         images.count_lab_pixel()
 
@@ -57,12 +59,8 @@ def problematique_APP2():
         plt.show()
         print("Done")
 
-    if True:
-        # cov = get_cov()
-
-        im_list = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) + 100
-
-        images = ImageCollection(im_list)
+    if False:
+        cov = images.get_cov()
 
         images.images_display()
 

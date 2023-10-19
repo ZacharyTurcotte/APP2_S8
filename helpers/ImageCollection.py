@@ -45,7 +45,17 @@ class ImageCollection:
         self._path = glob.glob(self.image_folder + os.sep + r"*.jpg")
         image_list = os.listdir(self.image_folder)
         # Filtrer pour juste garder les images
-        self.image_list = [i for i in image_list if '.jpg' in i]
+        self.image_list = [i for i in image_list if '.jpg' in i] # filtre .jpeg
+        self.image_list2 = []
+
+        if load_img is None:
+            self.image_list2 = self.image_list
+        else:
+            for i in range(len(load_img)):
+                self.image_list2.append(self.image_list[i])
+
+
+
         self.target = []
         self.all_images_loaded = False
         self.images = []
@@ -64,7 +74,8 @@ class ImageCollection:
                 self.images.append(skiio.imread(self.image_folder + os.sep + self.image_list[load_img[i]]))
         self.nb_images = len(self.images)
         self.labels = []
-        for i in image_list:
+
+        for i in self.image_list2:
             if 'coast' in i:
                 self.labels.append(ImageCollection.imageLabels.coast)
                 self.target.append(0)
@@ -140,10 +151,10 @@ class ImageCollection:
             self.nb_blue_pixels_lab[i] = np.sum(np.array(lab[:, 2]) <= 0, axis=0)
             self.nb_yellow_pixels_lab[i] = np.sum(np.array(lab[:, 2]) > 0, axis=0)
 
-    def get_edge(self, idx, view=False):
+    def get_edge(self, view=False):
 
-        for i in range(len(idx)):
-            grayscale = cv2.cvtColor(self.images[idx[i]], cv2.COLOR_BGR2GRAY)
+        for i in range(self.nb_images):
+            grayscale = cv2.cvtColor(self.images[i], cv2.COLOR_BGR2GRAY)
             # cv2.imshow('Grayscale', grayscale)
             edges = cv2.Canny(grayscale, 100, 200)
             if view:
@@ -157,9 +168,8 @@ class ImageCollection:
     def get_cov(self):
         images = []
         for image in self.images:
-            grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-        return images
+            images.append(cv2.cvtColor(self.images[image], cv2.COLOR_BGR2GRAY))
+        self.images = images
 
     def get_select(self, index):
         return index
@@ -191,10 +201,10 @@ class ImageCollection:
         ax2 = fig2.subplots(self.nb_images, 1)
         for i in range(self.nb_images):
             if self.all_images_loaded:
-                im = self.images[i]
+                pass # on devrait pas print toutes les images
             else:
-                im = skiio.imread(self.image_folder + os.sep + self.image_list[i])
-            ax2[i].imshow(im)
+                im = self.images[i]
+                ax2[i].imshow(im)
 
     def get_color_info(self, image):
 
