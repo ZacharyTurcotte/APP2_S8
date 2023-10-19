@@ -7,14 +7,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 from helpers.ImageCollection import ImageCollection
 import helpers.analysis as an
+import helpers.classifiers as classifiers
+from keras.optimizers import Adam
+import keras as K
+
 import cv2
 import helpers.ClassificationData as CD
 
 
 #######################################
 def problematique_APP2():
+    #images = ImageCollection()
     # images = ImageCollection()
-    # images = ImageCollection(load_all=True)
     # Génère une liste de N images, les visualise et affiche leur histo de couleur
     # TODO: voir L1.E4 et problématique
     print("xd")
@@ -61,6 +65,29 @@ def problematique_APP2():
 
     if False:
         cov = images.get_cov()
+    if True:
+        n_layers = 6
+        n_neurons = [3,10,9,8,7,6]
+
+        nn1 = classifiers.NNClassify_APP2(data2train=data_to_view, data2test=data_to_view,
+                                          n_layers=n_layers, n_neurons=n_neurons, innerActivation='relu',
+                                          outputActivation='softmax', optimizer=Adam(), loss='binary_crossentropy',
+                                          metrics=['accuracy'],
+                                          callback_list=[K.callbacks.EarlyStopping(patience=50, verbose=1,
+                                                                                   restore_best_weights=True),
+                                                         classifiers.print_every_N_epochs(25)],
+                                          # TODO à compléter L2.E4
+                                          experiment_title='NN Simple',
+                                          n_epochs=1000, savename='3classes',
+                                          ndonnees_random=5000, gen_output=True, view=True)
+
+        print("Done")
+    if True:
+        # cov = get_cov()
+
+        im_list = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) + 100
+
+        images = ImageCollection(im_list)
 
         images.images_display()
 
