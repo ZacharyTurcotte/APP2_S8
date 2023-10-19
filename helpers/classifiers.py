@@ -387,9 +387,9 @@ class NNClassifier:
             self.NNmodel = Sequential()
             self.state = self.state and not NNClassifier.NNstate.trained
             self.state = self.state and not NNClassifier.NNstate.architecture
-        self.NNmodel.add(Dense(units=n_neurons, activation=innerActivation, input_shape=(self.traindata1array.shape[-1],)))
+        self.NNmodel.add(Dense(units=n_neurons[0], activation=innerActivation, input_shape=(self.traindata1array.shape[-1],)))
         for i in range(2, n_hidden_layers):
-            self.NNmodel.add(Dense(units=n_neurons, activation=innerActivation))
+            self.NNmodel.add(Dense(units=n_neurons[i-1], activation=innerActivation))
         self.NNmodel.add(Dense(units=self.trainlabels1array.shape[-1], activation=outputActivation))
         self.NNmodel.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         if gen_output:

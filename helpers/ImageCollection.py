@@ -122,6 +122,11 @@ class ImageCollection:
         self.std_lab = np.reshape(self.std_lab, (self.nb_images, 3))
         self.std_hsv = np.reshape(self.std_hsv, (self.nb_images, 3))
 
+        self.red_green_diff = np.zeros(self.nb_images)
+        self.red_blue_diff = np.zeros(self.nb_images)
+        self.blue_green_diff = np.zeros(self.nb_images)
+
+
     def get_samples(self, N):
         return np.sort(random.sample(range(np.size(self.image_list, 0)), N))
 
@@ -243,6 +248,18 @@ class ImageCollection:
         self.mean_rgb.append(mean_rgb)
         self.mean_lab.append(mean_lab)
         self.mean_hsv.append(mean_hsv)
+
+
+    def rgb_diff(self):
+
+        self.red_blue_diff = np.abs(self.mean_rgb[:,0] - self.mean_rgb[:,2])
+        self.red_green_diff = np.abs(self.mean_rgb[:, 0] - self.mean_rgb[:, 1])
+        self.blue_green_diff = np.abs(self.mean_rgb[:, 2] - self.mean_rgb[:, 1])
+
+    def get_lightness(self):
+        for i in range(self.nb_images):
+            lab = np.reshape(self.lab[i],(256*256,3))
+            self.lightness[i] = np.sum(lab[:,0])
 
     def get_rgb_lab_hsv_std(self):
 
