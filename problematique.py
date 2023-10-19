@@ -15,14 +15,46 @@ def problematique_APP2():
     images = ImageCollection(load_all=True)
     # Génère une liste de N images, les visualise et affiche leur histo de couleur
     # TODO: voir L1.E4 et problématique
-    idx = np.arange(0,980,1)
-    edges = images.get_edge(idx)
+    print("xd")
+    if True:
+            idx = np.arange(0,980,1)
+            images.get_edge(idx)
+            data = images.nb_edges
+            data_to_view = np.zeros((980, 3))
+            images.count_rgb_pixel()
+            images.count_lab_pixel()
 
-    plt.hist(edges,bins=500)
-    plt.hist(edges[0:360],bins=500)
-    plt.hist(edges[360:688], bins=500)
-    plt.hist(edges[688:], bins=500)
-    plt.show()
+            # data_to_view[:,0] = images.sum_red_rgb
+            # data_to_view[:, 1] = images.sum_green_rgb
+            data_to_view[:, 2] = images.sum_blue_rgb
+
+            data_to_view[:,0] = images.sum_red_rgb
+            data_to_view[:, 1] = images.nb_red_pixels_lab
+            data_to_view[:, 2] = images.nb_edges
+
+
+            an.view3D(data_to_view, images.target, "3D")
+
+            # plt.figure(1)
+            # bins = 50
+            # range = [0,6e6]
+            # plt.hist(images.nb_edges,bins=bins,range=range)
+            # plt.title("all")
+            #
+            # plt.figure(2)
+            # plt.hist(images.nb_edges[0:360],bins=bins,range=range)
+            # plt.title("coast")
+            #
+            # plt.figure(3)
+            # plt.hist(images.nb_edges[360:688], bins=bins,range=range)
+            # plt.title("forest")
+            #
+            # plt.figure(4)
+            # plt.hist(images.nb_edges[688:], bins=bins,range=range)
+            # plt.title("street")
+            #
+            plt.show()
+            print("Done")
 
     if False:
         print("xd")

@@ -49,12 +49,14 @@ class ImageCollection:
         self.all_images_loaded = False
         self.images = []
         self.nb_edges = []
+        self.nb_images = 0
         # Crée un array qui contient toutes les images
         # Dimensions [980, 256, 256, 3]
         #            [Nombre image, hauteur, largeur, RGB]
         if load_all:
             self.images = np.array([np.array(skiio.imread(image)) for image in self._path])
             self.all_images_loaded = True
+            self.nb_images = len(self.images)
 
         self.labels = []
         for i in image_list:
@@ -74,6 +76,16 @@ class ImageCollection:
         self.rgb = []
         self.lab = []
         self.hsv = []
+
+        self.nb_blue_pixels_lab = np.zeros(self.nb_images)
+        self.nb_red_pixels_lab = np.zeros(self.nb_images)
+        self.nb_green_pixels_lab = np.zeros(self.nb_images)
+        self.nb_yellow_pixels_lab = np.zeros(self.nb_images)
+
+        self.sum_red_rgb = np.zeros(self.nb_images)
+        self.sum_green_rgb = np.zeros(self.nb_images)
+        self.sum_blue_rgb = np.zeros(self.nb_images)
+
 
         # calculate means
         self.mean_rgb = []
@@ -97,22 +109,47 @@ class ImageCollection:
         self.std_rgb = np.array(self.std_rgb)
         self.std_lab = np.array(self.std_lab)
         self.std_hsv = np.array(self.std_hsv)
+
+        self.mean_rgb = np.reshape(self.mean_rgb,(self.nb_images,3))
+        self.mean_lab = np.reshape(self.mean_lab, (self.nb_images, 3))
+        self.mean_hsv = np.reshape(self.mean_hsv, (self.nb_images, 3))
+
+        self.std_rgb = np.reshape(self.std_rgb,(self.nb_images,3))
+        self.std_lab = np.reshape(self.std_lab, (self.nb_images, 3))
+        self.std_hsv = np.reshape(self.std_hsv, (self.nb_images, 3))
     def get_samples(self, N):
         return np.sort(random.sample(range(np.size(self.image_list, 0)), N))
 
-    def get_edge(self,idx):
-        debut = time.time()
+    def count_rgb_pixel(self):
+
+        for i in range(self.nb_images):
+            rgb = np.reshape(self.rgb[i],(256*256,3))
+            self.sum_blue_rgb[i] = np.sum(rgb[:,2])
+            self.sum_red_rgb[i] = np.sum(rgb[:,0])
+            self.sum_green_rgb[i] = np.sum(rgb[:,1])
+
+    def count_lab_pixel(self):
+        for i in range(self.nb_images):
+            lab = np.reshape(self.lab[i], (256 * 256, 3))
+            self.nb_green_pixels_lab[i] = np.sum(np.array(lab[:,1]) <= 0, axis=0)
+            self.nb_red_pixels_lab[i] = np.sum(np.array(lab[:,1]) > 0, axis=0)
+            self.nb_blue_pixels_lab[i] = np.sum(np.array(lab[:,2]) <= 0, axis=0)
+            self.nb_yellow_pixels_lab[i] = np.sum(np.array(lab[:,2]) > 0, axis=0)
+
+    def get_edge(self,idx,view=False):
+
         for i in range(len(idx)):
             grayscale = cv2.cvtColor(self.images[idx[i]], cv2.COLOR_BGR2GRAY)
             #cv2.imshow('Grayscale', grayscale)
-            edges = cv2.Canny(grayscale, 200, 300)
-            #plt.figure(2*i)
-            #plt.imshow(edges, cmap='gray')
-            #plt.figure(2*i+1)
-            #plt.imshow(self.images[idx[i]])
+            edges = cv2.Canny(grayscale, 100, 200)
+            if view:
+                plt.figure(2*i)
+                plt.imshow(edges, cmap='gray')
+                plt.figure(2*i+1)
+                plt.imshow(self.images[idx[i]])
             self.nb_edges.append(np.sum(edges))
         #plt.show()
-        print(time.time() - debut)
+
     def get_select(self,index):
         return index
 
@@ -202,6 +239,8 @@ class ImageCollection:
         self.mean_rgb.append(mean_rgb)
         self.mean_lab.append(mean_lab)
         self.mean_hsv.append(mean_hsv)
+
+
 
     def get_rgb_lab_hsv_std(self, image):
 
