@@ -88,6 +88,7 @@ def calc_erreur_classification(original_data, classified_data, gen_output=False)
     Retourne l'index des éléments différents entre deux vecteurs
     Affiche l'erreur moyenne et la matrice de confusion
     """
+
     # génère le vecteur d'erreurs de classification
     vect_err = np.absolute(original_data - classified_data).astype(bool)
     indexes = np.array(np.where(vect_err))[0]
@@ -106,9 +107,9 @@ def calcModeleGaussien(data, message=''):
     :return: la moyenne, la matrice de covariance, les valeurs propres et les vecteurs propres de "data"
     """
     # TODO Labo L1.E2.2 Compléter le code avec les fonctions appropriées ici
-    moyenne = np.ones(np.asarray(data).shape[-1]) # pas_la_bonne_moyenne
-    matr_cov = np.identity(np.asarray(data).shape[-1]) # pas la bonne covariance
-    val_propres, vect_propres = [[1, 2], [[1,1],[-1, -1]]] # pas la bonne affaire
+    moyenne = np.mean(data,axis=0) # pas_la_bonne_moyenne
+    matr_cov = np.cov(data,rowvar=False) # pas la bonne covariance
+    val_propres, vect_propres = np.linalg.eig(matr_cov)
     if message:
         printModeleGaussien(moyenne, matr_cov, val_propres, vect_propres, message)
     return moyenne, matr_cov, val_propres, vect_propres
@@ -130,8 +131,15 @@ def creer_hist2D(data, title='', nbinx=15, nbiny=15, view=False):
     deltax = (np.max(x) - np.min(x)) / nbinx
     deltay = (np.max(y) - np.min(y)) / nbiny
 
+    bin_x = np.zeros(nbinx)
+    bin_y = np.zeros(nbiny)
+
+    for i in range(nbinx):
+        bin_x[i] = np.min(x)+deltax*i
+        bin_y[i] = np.min(y)+deltay*i
+
     # TODO L3.S2.1: remplacer les valeurs bidons par la bonne logique ici
-    hist, xedges, yedges = np.histogram2d([1, 1], [1, 1], bins=[1, 1]) # toutes ces valeurs sont n'importe quoi
+    hist, xedges, yedges = np.histogram2d(data[:,0],data[:,1], bins=[bin_x, bin_y]) # toutes ces valeurs sont n'importe quoi
     # normalise par la somme (somme de densité de prob = 1)
     histsum = np.sum(hist)
     hist = hist / histsum
@@ -246,7 +254,7 @@ def project_onto_new_basis(data, basis):
     for i in range(dims[0]):  # dims[0] = n_classes
         tempdata = data[i]
         # TODO Labo L1.E2.5 Remplacer l'opération bidon par la bonne projection ici
-        # projected[i] = ??
+        projected[i] = tempdata@basis # pour projeter
     return projected
 
 
@@ -371,8 +379,7 @@ def view3D(data3D, targets, title):
                        [0.0, 1.0, 0.0],  # Green
                        [0.0, 0.0, 1.0]])  # Blue
     c = colors[targets]
-
-    fig = plt.figure(figsize=(8, 8))
+    fig = plt.figure(100,figsize=(8, 8))
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(data3D[:, 0], data3D[:, 1], data3D[:, 2], s=10.0, c=c, marker='x')
     ax.set_title(title)
@@ -496,10 +503,14 @@ def viewEllipse(data, ax, scale=1, facecolor='none', edgecolor='red', **kwargs):
     retourne l'objet Ellipse créé
     """
     moy, cov, lambdas, vectors = calcModeleGaussien(data)
+
+
+
     # TODO L3.E1.1 Remplacer les valeurs bidons par les bons paramètres à partir des stats ici
     # tous les 1 sont suspects
-    ellipse = Ellipse((1, 1), width=2 * np.sqrt(1) * scale, height=2 * np.sqrt(1) * scale,
-                      angle=-np.degrees(1), facecolor=facecolor,
+
+    ellipse = Ellipse(moy, width=np.sqrt(lambdas[0])*2, height=np.sqrt(lambdas[1])*2,
+                      angle=-np.degrees(np.arctan(vectors[0][1]/vectors[0][0])), facecolor=facecolor, #sus
                       edgecolor=edgecolor, linewidth=2, **kwargs)
     return ax.add_patch(ellipse)
 
