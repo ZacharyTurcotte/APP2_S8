@@ -33,12 +33,13 @@ class ImageCollection:
     """
     Classe globale pour regrouper les infos utiles et les méthodes de la collection d'images
     """
+
     class imageLabels(IntEnum):
         coast = auto()
         forest = auto()
         street = auto()
 
-    def __init__(self, load_all=False):
+    def __init__(self, load_img=None):
         # liste de toutes les images
         self.image_folder = r"data" + os.sep + "baseDeDonneesImages"
         self._path = glob.glob(self.image_folder + os.sep + r"*.jpg")
@@ -53,11 +54,15 @@ class ImageCollection:
         # Crée un array qui contient toutes les images
         # Dimensions [980, 256, 256, 3]
         #            [Nombre image, hauteur, largeur, RGB]
-        if load_all:
+        if load_img is None:
             self.images = np.array([np.array(skiio.imread(image)) for image in self._path])
             self.all_images_loaded = True
-            self.nb_images = len(self.images)
-
+        else:
+            if type(load_img) == int:
+                load_img = [load_img]
+            for i in range(len(load_img)):
+                self.images.append(skiio.imread(self.image_folder + os.sep + self.image_list[load_img[i]]))
+        self.nb_images = len(self.images)
         self.labels = []
         for i in image_list:
             if 'coast' in i:
@@ -86,7 +91,6 @@ class ImageCollection:
         self.sum_green_rgb = np.zeros(self.nb_images)
         self.sum_blue_rgb = np.zeros(self.nb_images)
 
-
         # calculate means
         self.mean_rgb = []
         self.mean_lab = []
@@ -100,7 +104,7 @@ class ImageCollection:
         for i in range(len(self.images)):
             self.get_color_info(self.images[i])
             self.get_rgb_lab_hsv_mean(self.images[i])
-            self.get_rgb_lab_hsv_std(self.images[i])
+            self.get_rgb_lab_hsv_std()
 
         self.mean_rgb = np.array(self.mean_rgb)
         self.mean_lab = np.array(self.mean_lab)
@@ -110,47 +114,54 @@ class ImageCollection:
         self.std_lab = np.array(self.std_lab)
         self.std_hsv = np.array(self.std_hsv)
 
-        self.mean_rgb = np.reshape(self.mean_rgb,(self.nb_images,3))
+        self.mean_rgb = np.reshape(self.mean_rgb, (self.nb_images, 3))
         self.mean_lab = np.reshape(self.mean_lab, (self.nb_images, 3))
         self.mean_hsv = np.reshape(self.mean_hsv, (self.nb_images, 3))
 
-        self.std_rgb = np.reshape(self.std_rgb,(self.nb_images,3))
+        self.std_rgb = np.reshape(self.std_rgb, (self.nb_images, 3))
         self.std_lab = np.reshape(self.std_lab, (self.nb_images, 3))
         self.std_hsv = np.reshape(self.std_hsv, (self.nb_images, 3))
+
     def get_samples(self, N):
         return np.sort(random.sample(range(np.size(self.image_list, 0)), N))
 
     def count_rgb_pixel(self):
-
         for i in range(self.nb_images):
-            rgb = np.reshape(self.rgb[i],(256*256,3))
-            self.sum_blue_rgb[i] = np.sum(rgb[:,2])
-            self.sum_red_rgb[i] = np.sum(rgb[:,0])
-            self.sum_green_rgb[i] = np.sum(rgb[:,1])
+            rgb = np.reshape(self.rgb[i], (256 * 256, 3))
+            self.sum_blue_rgb[i] = np.sum(rgb[:, 2])
+            self.sum_red_rgb[i] = np.sum(rgb[:, 0])
+            self.sum_green_rgb[i] = np.sum(rgb[:, 1])
 
     def count_lab_pixel(self):
         for i in range(self.nb_images):
             lab = np.reshape(self.lab[i], (256 * 256, 3))
-            self.nb_green_pixels_lab[i] = np.sum(np.array(lab[:,1]) <= 0, axis=0)
-            self.nb_red_pixels_lab[i] = np.sum(np.array(lab[:,1]) > 0, axis=0)
-            self.nb_blue_pixels_lab[i] = np.sum(np.array(lab[:,2]) <= 0, axis=0)
-            self.nb_yellow_pixels_lab[i] = np.sum(np.array(lab[:,2]) > 0, axis=0)
+            self.nb_green_pixels_lab[i] = np.sum(np.array(lab[:, 1]) <= 0, axis=0)
+            self.nb_red_pixels_lab[i] = np.sum(np.array(lab[:, 1]) > 0, axis=0)
+            self.nb_blue_pixels_lab[i] = np.sum(np.array(lab[:, 2]) <= 0, axis=0)
+            self.nb_yellow_pixels_lab[i] = np.sum(np.array(lab[:, 2]) > 0, axis=0)
 
-    def get_edge(self,idx,view=False):
+    def get_edge(self, idx, view=False):
 
         for i in range(len(idx)):
             grayscale = cv2.cvtColor(self.images[idx[i]], cv2.COLOR_BGR2GRAY)
-            #cv2.imshow('Grayscale', grayscale)
+            # cv2.imshow('Grayscale', grayscale)
             edges = cv2.Canny(grayscale, 100, 200)
             if view:
-                plt.figure(2*i)
+                plt.figure(2 * i)
                 plt.imshow(edges, cmap='gray')
-                plt.figure(2*i+1)
+                plt.figure(2 * i + 1)
                 plt.imshow(self.images[idx[i]])
             self.nb_edges.append(np.sum(edges))
-        #plt.show()
+        # plt.show()
 
-    def get_select(self,index):
+    def get_cov(self):
+        images = []
+        for image in self.images:
+            grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        return images
+
+    def get_select(self, index):
         return index
 
     def generateHistogram(self, image, n_bins=256):
@@ -175,24 +186,17 @@ class ImageCollection:
         # TODO L1.E4.8: commencer l'analyse de la représentation choisie
         raise NotImplementedError()
 
-    def images_display(self, indexes):
-        """
-        fonction pour afficher les images correspondant aux indices
-        indexes: indices de la liste d'image (int ou list of int)
-        """
-        # Pour qu'on puisse traiter 1 seule image
-        if type(indexes) == int:
-            indexes = [indexes]
-
+    def images_display(self):
         fig2 = plt.figure()
-        ax2 = fig2.subplots(len(indexes), 1)
-        for i in range(len(indexes)):
+        ax2 = fig2.subplots(self.nb_images, 1)
+        for i in range(self.nb_images):
             if self.all_images_loaded:
                 im = self.images[i]
             else:
-                im = skiio.imread(self.image_folder + os.sep + self.image_list[indexes[i]])
+                im = skiio.imread(self.image_folder + os.sep + self.image_list[i])
             ax2[i].imshow(im)
-    def get_color_info(self,image):
+
+    def get_color_info(self, image):
 
         imageRGB = image
         imageLab = skic.rgb2lab(image)
@@ -202,7 +206,7 @@ class ImageCollection:
         self.lab.append(imageLab)
         self.hsv.append(imageHVS)
 
-    def classify(self,idx):
+    def classify(self, idx):
         if 0 <= idx < 360:
             return 0
         elif 360 <= idx < 688:
@@ -212,37 +216,35 @@ class ImageCollection:
 
     def get_rgb_lab_hsv_mean(self, image):
 
-        mean_rgb = np.zeros((1,3))
-        mean_lab = np.zeros((1,3))
-        mean_hsv = np.zeros((1,3))
+        mean_rgb = np.zeros((1, 3))
+        mean_lab = np.zeros((1, 3))
+        mean_hsv = np.zeros((1, 3))
 
         imageRGB = np.array(self.rgb[-1])
         imageLab = np.array(self.lab[-1])
         imageHVS = np.array(self.hsv[-1])
 
-        imageRGB = imageRGB.reshape(256*256,3)
-        imageLab = imageLab.reshape(256*256,3)
-        imageHVS = imageHVS.reshape(256*256,3)
+        imageRGB = imageRGB.reshape(256 * 256, 3)
+        imageLab = imageLab.reshape(256 * 256, 3)
+        imageHVS = imageHVS.reshape(256 * 256, 3)
 
-        mean_rgb[0,0] = np.mean(imageRGB[:,0])
-        mean_rgb[0,1] = np.mean(imageRGB[:,1])
-        mean_rgb[0,2] = np.mean(imageRGB[:,2])
+        mean_rgb[0, 0] = np.mean(imageRGB[:, 0])
+        mean_rgb[0, 1] = np.mean(imageRGB[:, 1])
+        mean_rgb[0, 2] = np.mean(imageRGB[:, 2])
 
-        mean_lab[0,0] = np.mean(imageLab[:,0])
-        mean_lab[0,1] = np.mean(imageLab[:,1])
-        mean_lab[0,2] = np.mean(imageLab[:,2])
+        mean_lab[0, 0] = np.mean(imageLab[:, 0])
+        mean_lab[0, 1] = np.mean(imageLab[:, 1])
+        mean_lab[0, 2] = np.mean(imageLab[:, 2])
 
-        mean_hsv[0,0] = np.mean(imageHVS[:,0])
-        mean_hsv[0,1] = np.mean(imageHVS[:,1])
-        mean_hsv[0,2] = np.mean(imageHVS[:,2])
+        mean_hsv[0, 0] = np.mean(imageHVS[:, 0])
+        mean_hsv[0, 1] = np.mean(imageHVS[:, 1])
+        mean_hsv[0, 2] = np.mean(imageHVS[:, 2])
 
         self.mean_rgb.append(mean_rgb)
         self.mean_lab.append(mean_lab)
         self.mean_hsv.append(mean_hsv)
 
-
-
-    def get_rgb_lab_hsv_std(self, image):
+    def get_rgb_lab_hsv_std(self):
 
         std_rgb = np.zeros((1, 3))
         std_lab = np.zeros((1, 3))
@@ -299,7 +301,7 @@ class ImageCollection:
             n_bins = 256
 
             # Lab et HSV requiert un rescaling avant d'histogrammer parce que ce sont des floats au départ!
-            imageLabhist = an.rescaleHistLab(imageLab, n_bins) # External rescale pour Lab
+            imageLabhist = an.rescaleHistLab(imageLab, n_bins)  # External rescale pour Lab
             imageHSVhist = np.round(imageHSV * (n_bins - 1))  # HSV has all values between 0 and 100
 
             # Construction des histogrammes
@@ -323,17 +325,17 @@ class ImageCollection:
 
             # 2e histogramme
             # TODO L1.E4 afficher les autres histogrammes de Lab ou HSV dans la 2e colonne de subplots
-            ax[image_counter, 1].scatter(range(start, end), histtvaluesLab[0, start:end], s=3,c="black")
-            ax[image_counter, 1].scatter(range(start, end), histtvaluesLab[1, start:end], s=3,c="red")
-            ax[image_counter, 1].scatter(range(start, end), histtvaluesLab[2, start:end], s=3,c="cyan")
+            ax[image_counter, 1].scatter(range(start, end), histtvaluesLab[0, start:end], s=3, c="black")
+            ax[image_counter, 1].scatter(range(start, end), histtvaluesLab[1, start:end], s=3, c="red")
+            ax[image_counter, 1].scatter(range(start, end), histtvaluesLab[2, start:end], s=3, c="cyan")
             ax[image_counter, 1].set(xlabel='intensité', ylabel='comptes')
             # ajouter le titre de la photo observée dans le titre de l'histogramme
             image_name = self.image_list[indexes[image_counter]]
             ax[image_counter, 1].set_title(f'histogramme Lab de {image_name}')
 
-            ax[image_counter, 2].scatter(range(start, end), histvaluesHSV[0, start:end], s=3,c="green")
-            ax[image_counter, 2].scatter(range(start, end), histvaluesHSV[1, start:end], s=3,c="red")
-            ax[image_counter, 2].scatter(range(start, end), histvaluesHSV[2, start:end], s=3,c="black")
+            ax[image_counter, 2].scatter(range(start, end), histvaluesHSV[0, start:end], s=3, c="green")
+            ax[image_counter, 2].scatter(range(start, end), histvaluesHSV[1, start:end], s=3, c="red")
+            ax[image_counter, 2].scatter(range(start, end), histvaluesHSV[2, start:end], s=3, c="black")
             ax[image_counter, 2].set(xlabel='intensité', ylabel='comptes')
             # ajouter le titre de la photo observée dans le titre de l'histogramme
             image_name = self.image_list[indexes[image_counter]]
