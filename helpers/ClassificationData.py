@@ -64,8 +64,8 @@ class ClassificationData:
         self.vectpr = []
         self.coeffs = []
 
-        self.getStats()
-        self.getBorders()
+        self.getStats(gen_print=True)
+        # self.getBorders(view=True)
 
     def getStats(self, gen_print=False):
         if not self.m:
@@ -85,5 +85,5 @@ class ClassificationData:
         if not self.coeffs:
             self.coeffs = classifiers.get_gaussian_borders(self.dataLists)
         if view:
-            an.view_classes(self.dataLists, self.extent, self.coeffs)
+            an.view_classes(self.dataLists, self.extent)
         return self.coeffs

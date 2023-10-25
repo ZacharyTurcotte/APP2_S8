@@ -52,7 +52,7 @@ class ImageCollection:
             self.image_list2 = self.image_list
         else:
             for i in range(len(load_img)):
-                self.image_list2.append(self.image_list[i])
+                self.image_list2.append(self.image_list[load_img[i]])
 
 
 
@@ -87,6 +87,8 @@ class ImageCollection:
                 self.target.append(2)
             else:
                 raise ValueError(i)
+
+        self.edges = np.zeros((256 * 256, self.nb_images))
 
         # calculate rgb, lab, hsv
         self.rgb = []
@@ -166,15 +168,59 @@ class ImageCollection:
                 plt.figure(2 * i)
                 plt.imshow(edges, cmap='gray')
                 plt.figure(2 * i + 1)
-                plt.imshow(self.images[idx[i]])
+                plt.imshow(self.images[i])
             self.nb_edges.append(np.sum(edges))
         # plt.show()
 
+    def edge_detection(self):
+        edge_sum = np.zeros(self.nb_images)
+        kernel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+        kernel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
+
+        for i in range(self.nb_images):
+            grayscale = np.array(cv2.cvtColor(self.images[i], cv2.COLOR_BGR2GRAY)).flatten()
+
+            # Apply convolution with the Sobel kernels
+            edges_x = np.abs(np.convolve(grayscale, kernel_x.flatten(), mode='same').reshape(grayscale.shape))
+            edges_y = np.abs(np.convolve(grayscale, kernel_y.flatten(), mode='same').reshape(grayscale.shape))
+
+            # Combine horizontal and vertical edges
+            self.edges[:, i] = (np.sqrt(edges_x**2 + edges_y**2))
+            self.edges[self.edges < 50] = 0
+            edge_sum[i] = np.sum(self.edges[:, i].reshape(256 * 256))
+            print(i)
+
+        return edge_sum
+
     def get_cov(self):
         images = []
+
         for image in self.images:
-            images.append(cv2.cvtColor(self.images[image], cv2.COLOR_BGR2GRAY))
-        self.images = images
+            image = (cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)) # convert images into [255][255]
+            # image_left = image[:, :128]
+            # image_right = np.flip(image[:, 128:], 0) # horiz flip
+            #
+            # mean_left = np.mean(image_left)
+            # mean_right = np.mean(image_right)
+            #
+            # left_centered = image_left - mean_left
+            # right_centered = image_right - mean_right
+            #
+            # cov = np.dot(left_centered.T, right_centered) / (image_left.shape[0] - 1)
+            # print(cov)
+
+
+            # Créer une version miroir de l'image
+
+            mirrored_image = cv2.flip(image, 1)  # 1 pour une réflexion horizontale
+
+            # Comparer l'image originale à son miroir
+
+            symmetry_difference = cv2.absdiff(image, mirrored_image)
+
+            mean_diff = np.mean(symmetry_difference)
+            images.append(mean_diff)
+        return images
 
     def get_select(self, index):
         return index

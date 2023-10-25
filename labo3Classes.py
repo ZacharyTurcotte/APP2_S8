@@ -36,11 +36,10 @@ def labo_APP2():
         data3classes.getBorders(view=True)
         # exemple d'une densité de probabilité arbitraire pour 1 classe
         an.creer_hist2D(data3classes.dataLists[0], 'C1', view=True,nbinx=30,nbiny=30)
-        an.view_classes()
+        # an.view_classes()
     if False:
         # Décorrélation
         # TODO Labo L1.E3.5
-        #data3classesDecorr = ClassificationData(il_manque_la_decorréleation_ici)
         data3classesDecorr = ClassificationData(an.project_onto_new_basis(data3classes.dataLists, data3classes.vectpr[0]))
 
         print('\n\n=========================\nDonnées décorrélées\n')

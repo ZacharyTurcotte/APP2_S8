@@ -5,9 +5,16 @@ Problématique APP2 Module IA S8
 
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.decomposition import PCA
+
 from helpers.ImageCollection import ImageCollection
+from helpers.ClassificationData import ClassificationData
 import helpers.analysis as an
 import helpers.classifiers as classifiers
+import helpers.classifiers
+from helpers.ClassificationData import ClassificationData
+
+
 from keras.optimizers import Adam
 import keras as K
 
@@ -17,30 +24,82 @@ import helpers.ClassificationData as CD
 
 #######################################
 def problematique_APP2():
-    #images = ImageCollection()
-    # images = ImageCollection()
-    # Génère une liste de N images, les visualise et affiche leur histo de couleur
-    # TODO: voir L1.E4 et problématique
     print("xd")
-    im_list = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dtype=int) + 100
-    images = ImageCollection(im_list)
+    # im_list = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dtype=int) + 100
+    # im_list = np.array([0, 1, 4, 2, 8, 9, 3,38,39], dtype=int)
+    images = ImageCollection()
+    # images = ImageCollection(im_list)
+
     if True:
-        idx = np.arange(0, 980, 1)
-        images.get_edge()
-        data = images.nb_edges
-        data_to_view = np.zeros((images.nb_images, 3))
+        # calculs
         images.count_rgb_pixel()
         images.count_lab_pixel()
+        cov = images.get_cov()
+        mean_mean = np.mean(images.mean_rgb, axis=1)
+        # images.get_edge()
+        #     homemade edge detection
+        edge_sum = images.edge_detection()
+        images.nb_edges = edge_sum
 
-        # data_to_view[:,0] = images.sum_red_rgb
-        # data_to_view[:, 1] = images.sum_green_rgb
-        data_to_view[:, 2] = images.sum_blue_rgb
+        # normaliser
+        mean_mean, minMax_mean_rgm = an.scaleData(mean_mean)
+        cov, minMax_cov = an.scaleData(cov)
+        images.nb_edges, minMax_nb_edges = an.scaleData(images.nb_edges)
 
-        data_to_view[:, 0] = images.sum_red_rgb
-        data_to_view[:, 1] = images.nb_red_pixels_lab
+        #  view data 3d
+        data_to_view = np.zeros((images.nb_images, 3))
+        data_to_view[:, 0] = mean_mean
+        data_to_view[:, 1] = cov
         data_to_view[:, 2] = images.nb_edges
-
         an.view3D(data_to_view, images.target, "3D")
+
+        # separer les classes
+        C1 = [];C2 = [];C3 = []
+        for i in np.arange(0, images.nb_images):
+            if images.target[i] == 0:
+                C1.append(np.array([mean_mean[i], cov[i], images.nb_edges[i]]).T)
+            if images.target[i] == 1:
+                C2.append(np.array([mean_mean[i], cov[i], images.nb_edges[i]]).T)
+            if images.target[i] == 2:
+                C3.append(np.array([mean_mean[i], cov[i], images.nb_edges[i]]).T)
+
+        # prendre le meme nombre d'images pour chaque classes
+        # smallest_class = np.min([len(C1), len(C2), len(C3)])
+
+        smallest_class = 100
+        C1 = C1[:smallest_class]
+        C2 = C2[:smallest_class]
+        C3 = C3[:smallest_class]
+
+        # print stats
+        data3classes = ClassificationData([C1, C2, C3])
+
+
+
+        ppv1 = classifiers.PPVClassifier(data3classes, n_neighbors=1, metric='minkowski',
+                                         useKmean=False, n_represantants=1, experiment_title="1-PPV avec données orig comme représentants",
+                                         view=False)
+
+        feature = np.zeros((980, 3))
+        for i in np.arange(980):
+            feature[i, :] = [mean_mean[i], cov[i], images.nb_edges[i]]
+        predictions, errors_indexes = ppv1.predict(feature, images.target, gen_output=True)
+
+        error_rate = np.count_nonzero(images.target - np.resize(predictions, 980)) / 980 * 100
+
+
+
+        # ppv5 = classifiers.PPVClassify_APP2(data2train=data3classes, n_neighbors=5,
+        #                                     experiment_title='5-PPV avec données orig comme représentants',
+        #                                     gen_output=True, view=True)
+        # # 1-mean sur chacune des classes
+        # # suivi d'un 1-PPV avec ces nouveaux représentants de classes
+        # ppv1km1 = classifiers.PPVClassify_APP2(data2train=data3classes, data2test=data3classes, n_neighbors=1,
+        #                                        experiment_title='1-PPV sur le 1-moy',
+        #                                        useKmean=True, n_representants=9,
+        #                                        gen_output=True, view=True)
+
+        # plt.show()
 
         # plt.figure(1)
         # bins = 50
@@ -60,14 +119,12 @@ def problematique_APP2():
         # plt.hist(images.nb_edges[688:], bins=bins,range=range)
         # plt.title("street")
         #
-        plt.show()
+        # plt.show()
         print("Done")
 
     if False:
-        cov = images.get_cov()
-    if True:
         n_layers = 6
-        n_neurons = [3,10,9,8,7,6]
+        n_neurons = [3, 10, 9, 8, 7, 6]
 
         nn1 = classifiers.NNClassify_APP2(data2train=data_to_view, data2test=data_to_view,
                                           n_layers=n_layers, n_neurons=n_neurons, innerActivation='relu',
@@ -82,14 +139,6 @@ def problematique_APP2():
                                           ndonnees_random=5000, gen_output=True, view=True)
 
         print("Done")
-    if True:
-        # cov = get_cov()
-
-        im_list = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) + 100
-
-        images = ImageCollection(im_list)
-
-        images.images_display()
 
     if False:
         print("xd")
