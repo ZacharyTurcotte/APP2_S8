@@ -48,17 +48,17 @@ class ImageCollection:
         self.image_list = [i for i in image_list if '.jpg' in i] # filtre .jpeg
         self.image_list2 = []
 
-        self.image_folder_jour = r"data" + os.sep + "jour"
-        self.image_folder_nuit = r"data" + os.sep + "nuit"
-
-        image_list_jour = os.listdir(self.image_folder_jour)
-        image_list_nuit = os.listdir(self.image_folder_nuit)
-
-        self.target_jour_nuit = []
-
-        if jour_nuit:
-            self.image_list_jour = [i for i in image_list_jour if '.jpg' in i]
-            self.image_list_nuit = [i for i in image_list_nuit if '.jpg' in i]
+        # self.image_folder_jour = r"data" + os.sep + "jour"
+        # self.image_folder_nuit = r"data" + os.sep + "nuit"
+        #
+        # image_list_jour = os.listdir(self.image_folder_jour)
+        # image_list_nuit = os.listdir(self.image_folder_nuit)
+        #
+        # self.target_jour_nuit = []
+        #
+        # if jour_nuit:
+        #     self.image_list_jour = [i for i in image_list_jour if '.jpg' in i]
+        #     self.image_list_nuit = [i for i in image_list_nuit if '.jpg' in i]
 
 
 

@@ -19,7 +19,6 @@ import keras as K
 from keras.models import Sequential, load_model
 from keras.layers import Dense
 from keras.optimizers import SGD
-from sklearn.decomposition import PCA
 import cv2
 import helpers.ClassificationData as CD
 
@@ -37,16 +36,10 @@ def problematique_APP2():
     images = ImageCollection(load_img=None)
     print("d")
 
-    #edges = images.edge_detection()
-
-    if False:
-        for i in np.arange(len(im_list)):
-            plt.figure(i)
-            plt.subplot(2,1,1)
-            plt.imshow(images.edges[:,i].reshape(256,256),cmap='gray')
-            plt.subplot(2,1,2)
-            plt.imshow(images.images[i])
-       # plt.show()
+    # 0 = kmean
+    # 1 = NN
+    # 2 = Bayes
+    choix_classificateur = 2
 
     if True:
         # calculs
@@ -54,9 +47,10 @@ def problematique_APP2():
         images.count_lab_pixel()
         cov = images.get_cov()
         mean_mean = np.mean(images.mean_rgb, axis=1)
-        # images.get_edge()
-        #     homemade edge detection
         images.get_edge()
+        # homemade edge detection
+        # edge_sum = images.edge_detection()
+        # images.nb_edges = edge_sum
 
         # normaliser
         mean_mean, minMax_mean_rgm = an.scaleData(mean_mean)
@@ -84,6 +78,13 @@ def problematique_APP2():
         data3classes_test_label_encode = OneHotEncoder(sparse_output=False).fit_transform(data3classes_test.labels1array)
 
         data3classes_train_label_encode = OneHotEncoder(sparse_output=False).fit_transform(data3classes_train.labels1array)
+        ######################################################################
+        # Kmeans, 1 PPV
+        ######################################################################
+        if choix_classificateur == 0:
+            ppv1 = classifiers.PPVClassifier(data3classes_train, n_neighbors=3, metric='minkowski',
+                                             useKmean=True, n_represantants=9, experiment_title="1-PPV avec données orig comme représentants",
+                                             view=False)
 
         NN = classifiers.NNClassify_prob(data3classes_train,data3classes_test,6,[3,10,9,8,7,6,5],)
 
@@ -98,70 +99,77 @@ def problematique_APP2():
         #
         # predictions, errors_indexes = ppv1.predict(data3classes_test.data1array, data3classes_test.labels1array, gen_output=True)
 
-        #error_rate = np.count_nonzero(images.target - np.resize(predictions, 980)) / 980 * 100
-        #print(error_rate)
+            predictions, errors_indexes = ppv1.predict(data3classes_test.data1array, data3classes_test.labels1array, gen_output=True)
 
+            error_rate = np.count_nonzero(images.target - np.resize(predictions, 980)) / 980 * 100
+            print(error_rate)
+            plt.show()
 
-        # ppv5 = classifiers.PPVClassify_APP2(data2train=data3classes, n_neighbors=5,
-        #                                     experiment_title='5-PPV avec données orig comme représentants',
-        #                                     gen_output=True, view=True)
-        # # 1-mean sur chacune des classes
-        # # suivi d'un 1-PPV avec ces nouveaux représentants de classes
-        # ppv1km1 = classifiers.PPVClassify_APP2(data2train=data3classes, data2test=data3classes, n_neighbors=1,
-        #                                        experiment_title='1-PPV sur le 1-moy',
-        #                                        useKmean=True, n_representants=9,
-        #                                        gen_output=True, view=True)
+        ######################################################################
+        # Reseau de neuron
+        ######################################################################
+        if (choix_classificateur == 1):
+            n_neurons = [4,10,9,8,7,6]
+            n_layers = 6
+            # shuffledTrainData, shuffledTrainLabels, shuffledValidData, shuffledValidLabels = an.splitDataNN(3, data3classes, target)
+            # data3classes
 
-        # plt.show()
-        #
-        # n_neurons = [4,10,9,8,7,6]
-        # n_layers = 6
-        # # shuffledTrainData, shuffledTrainLabels, shuffledValidData, shuffledValidLabels = an.splitDataNN(3, data3classes, target)
-        # # data3classes
-        #
-        # model = Sequential()
-        # model.add(Dense(units=3, activation='tanh',
-        #                 input_shape=(len(dims),)))
-        # model.add(Dense(units=10, activation='tanh',
-        #                 ))
-        # model.add(Dense(units=10, activation='tanh',
-        #                 ))
-        # model.add(Dense(units=8, activation='tanh',
-        #                 ))
-        # model.add(Dense(units=8, activation='tanh',
-        #                 ))
-        # model.add(Dense(units=8, activation='tanh',
-        #                 ))
-        # model.add(Dense(units=8, activation='tanh',
-        #                 ))
-        # model.add(Dense(units=7, activation='tanh',
-        #                 ))
-        # model.add(Dense(units=6, activation='tanh',
-        #                 ))
-        #
-        # model.add(Dense(units=3, activation='softmax'))
-        #
-        # print(model.summary())
-        #
-        # model.compile(optimizer=Adam(), loss='binary_crossentropy',metrics=None)
-        # print("compile done")
-        #
-        # model.fit(data3classes_train.data1array,data3classes_train_label_encode, batch_size=10, verbose=1,
-        #           epochs=1000, shuffle=False)  # TODO Labo: ajouter les arguments pour le validation set
-        # print("fit done")
-        # # Save trained model to disk
-        # model.save('saves' + os.sep + 'iris.keras')
-        # print("save done")
-        # an.plot_metrics(model)
-        #
-        # # Test model (loading from disk)
-        # model = load_model('saves' + os.sep + 'iris.keras')
-        # targetPred = model.predict(data3classes_test.data1array)
-        # print("predict done")
-        # # Print the number of classification errors from the training data
-        # error_indexes = an.calc_erreur_classification(np.argmax(targetPred, axis=-1), data3classes_test_label_encode, gen_output=True)
+            model = Sequential()
+            model.add(Dense(units=3, activation='tanh',
+                            input_shape=(len(dims),)))
+            model.add(Dense(units=10, activation='tanh',
+                            ))
+            model.add(Dense(units=9, activation='tanh',
+                            ))
+            model.add(Dense(units=8, activation='tanh',
+                            ))
+            model.add(Dense(units=7, activation='tanh',
+                            ))
+            model.add(Dense(units=6, activation='tanh',
+                            ))
+            # model.add(Dense(units=40, activation='tanh',
+            #                input_shape=(data.shape[-1],)))
+            model.add(Dense(units=3, activation='sigmoid'))  #
 
-        plt.show()
+            print(model.summary())
+
+            model.compile(optimizer=SGD(learning_rate=0.1, momentum=0.01), loss='mse')
+            print("compile done")
+            model.fit(data3classes_train.data1array, data3classes_train.labels1array, batch_size=10, verbose=1,
+                      epochs=1000, shuffle=False)  # TODO Labo: ajouter les arguments pour le validation set
+            print("fit done")
+            # Save trained model to disk
+            model.save('saves' + os.sep + 'iris.keras')
+            print("save done")
+            an.plot_metrics(model)
+
+            # Test model (loading from disk)
+            model = load_model('saves' + os.sep + 'iris.keras')
+            targetPred = model.predict(data3classes_test.data1array)
+            print("predict done")
+            # Print the number of classification errors from the training data
+            error_indexes = an.calc_erreur_classification(np.argmax(targetPred, axis=-1), data3classes_test.labels1array, gen_output=True)
+
+            plt.show()
+
+        ######################################################################
+        # Bayes
+        ######################################################################
+        if choix_classificateur == 2:
+            ## bayes
+
+            apriori = [1/3,1/3,1/3]
+            costs = [[0, 1, 1], [1, 0, 1], [1, 1, 0]] # le cost nous permet d'avoir du control sur les frontières.
+            # Bayes gaussien les apriori et coûts ne sont pas considérés pour l'instant
+            bg1 = classifiers.BayesClassifier(data3classes_train, classifiers.HistProbDensity, apriori=apriori, costs=costs)
+
+            bg1.predict(data3classes_test.data1array, data3classes_test.labels1array, gen_output=True)
+            plt.show()
+
+        print("Done")
+
+    if False:
+        cov = images.get_cov()
 
         # plt.figure(1)
         # bins = 50
@@ -182,10 +190,6 @@ def problematique_APP2():
         # plt.title("street")
         #
         # plt.show()
-        print("Done")
-
-    if False:
-        cov = images.get_cov()
     if False:
         n_layers = 6
         n_neurons = [3, 10, 9, 8, 7, 6]
@@ -268,9 +272,6 @@ def problematique_APP2():
         images.view_histogrammes(im_list)
 
         # print(CD.)
-
-    # images.generateRepresentation()
-    plt.show()
 
 
 ######################################
