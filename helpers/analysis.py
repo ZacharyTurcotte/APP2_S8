@@ -375,9 +375,9 @@ def view3D(data3D, targets, title):
     :param data: tableau, les 3 colonnes sont les données x, y, z
     :param target: sert à distinguer les classes, expect un encodage one-hot
     """
-    colors = np.array([[1.0, 0.0, 0.0],  # Red
-                       [0.0, 1.0, 0.0],  # Green
-                       [0.0, 0.0, 1.0]])  # Blue
+    colors = np.array([[1.0, 0.0, 0.0],  # Red -> coast
+                       [0.0, 1.0, 0.0],  # Green -> foret
+                       [0.0, 0.0, 1.0]])  # Blue -> street
     c = colors[targets]
     fig = plt.figure(100,figsize=(8, 8))
     ax = fig.add_subplot(111, projection='3d')

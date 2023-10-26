@@ -20,7 +20,7 @@ import os
 import glob
 import random
 import cv2
-import time
+
 from enum import IntEnum, auto
 
 from skimage import color as skic
@@ -39,7 +39,7 @@ class ImageCollection:
         forest = auto()
         street = auto()
 
-    def __init__(self, load_img=None):
+    def __init__(self, load_img=None, jour_nuit = False):
         # liste de toutes les images
         self.image_folder = r"data" + os.sep + "baseDeDonneesImages"
         self._path = glob.glob(self.image_folder + os.sep + r"*.jpg")
@@ -47,6 +47,20 @@ class ImageCollection:
         # Filtrer pour juste garder les images
         self.image_list = [i for i in image_list if '.jpg' in i] # filtre .jpeg
         self.image_list2 = []
+
+        self.image_folder_jour = r"data" + os.sep + "jour"
+        self.image_folder_nuit = r"data" + os.sep + "nuit"
+
+        image_list_jour = os.listdir(self.image_folder_jour)
+        image_list_nuit = os.listdir(self.image_folder_nuit)
+
+        self.target_jour_nuit = []
+
+        if jour_nuit:
+            self.image_list_jour = [i for i in image_list_jour if '.jpg' in i]
+            self.image_list_nuit = [i for i in image_list_nuit if '.jpg' in i]
+
+
 
         if load_img is None:
             self.image_list2 = self.image_list
@@ -139,7 +153,7 @@ class ImageCollection:
         self.red_blue_diff = np.zeros(self.nb_images)
         self.blue_green_diff = np.zeros(self.nb_images)
 
-
+        self.nb_grey_pixels = np.zeros(self.nb_images)
     def get_samples(self, N):
         return np.sort(random.sample(range(np.size(self.image_list, 0)), N))
 
@@ -346,6 +360,44 @@ class ImageCollection:
         self.std_rgb.append(std_rgb)
         self.std_lab.append(std_lab)
         self.std_hsv.append(std_hsv)
+
+    def split_data_PPV(self,split,dims):
+
+        C1_train = []
+        C2_train = []
+        C3_train = []
+
+        C1_test = []
+        C2_test = []
+        C3_test = []
+
+        data = np.array([self.target,dims])
+
+        shuffled_data = np.random.shuffle(data)
+
+        for i in np.arange(0, self.nb_images):
+
+            if shuffled_data[i,0] == 0:
+                C1_train.append(shuffled_data[i,1].T)
+            if shuffled_data[i,0] == 1:
+                C2_train.append(shuffled_data[i,1].T)
+            if shuffled_data[i,0] == 2:
+                C3_train.append(shuffled_data[i,1].T)
+
+        C1_train = C1_train[:split]
+        C2_train = C2_train[:split]
+        C3_train = C3_train[:split]
+
+        C1_test = C1_train[split:-1]
+        C2_test = C2_train[split:-1]
+        C3_test = C3_train[split:-1]
+
+        return [C1_train,C2_train,C3_train,C1_test,C2_test,C3_test]
+
+
+        # prendre le meme nombre d'images pour chaque classes
+        # smallest_class = np.min([len(C1), len(C2), len(C3)])
+
 
     def view_histogrammes(self, indexes):
         """

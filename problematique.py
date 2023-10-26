@@ -5,8 +5,6 @@ Problématique APP2 Module IA S8
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.decomposition import PCA
-
 from helpers.ImageCollection import ImageCollection
 from helpers.ClassificationData import ClassificationData
 import helpers.analysis as an
@@ -29,6 +27,22 @@ def problematique_APP2():
     # im_list = np.array([0, 1, 4, 2, 8, 9, 3,38,39], dtype=int)
     images = ImageCollection()
     # images = ImageCollection(im_list)
+
+    #im_list = np.array([100, 110, 450, 500, 600, 700, 800, 900, 950, 50], dtype=int) + 0
+    im_list = np.arange(0,980,5)
+    images = ImageCollection(load_img=None)
+    print("d")
+
+    #edges = images.edge_detection()
+
+    if False:
+        for i in np.arange(len(im_list)):
+            plt.figure(i)
+            plt.subplot(2,1,1)
+            plt.imshow(images.edges[:,i].reshape(256,256),cmap='gray')
+            plt.subplot(2,1,2)
+            plt.imshow(images.images[i])
+       # plt.show()
 
     if True:
         # calculs
@@ -54,22 +68,15 @@ def problematique_APP2():
         an.view3D(data_to_view, images.target, "3D")
 
         # separer les classes
-        C1 = [];C2 = [];C3 = []
-        for i in np.arange(0, images.nb_images):
-            if images.target[i] == 0:
-                C1.append(np.array([mean_mean[i], cov[i], images.nb_edges[i]]).T)
-            if images.target[i] == 1:
-                C2.append(np.array([mean_mean[i], cov[i], images.nb_edges[i]]).T)
-            if images.target[i] == 2:
-                C3.append(np.array([mean_mean[i], cov[i], images.nb_edges[i]]).T)
+        #C1 = [];C2 = [];C3 = []
+        dims = [mean_mean[i], cov[i], images.nb_edges[i],images.nb_grey_pixels]
+        [C1_train,C2_train,C3_train,C1_test,C2_test,C3_test] = images.split_data_PPV(200,dims)
 
         # prendre le meme nombre d'images pour chaque classes
         # smallest_class = np.min([len(C1), len(C2), len(C3)])
 
-        smallest_class = 100
-        C1 = C1[:smallest_class]
-        C2 = C2[:smallest_class]
-        C3 = C3[:smallest_class]
+
+
 
         # print stats
         data3classes = ClassificationData([C1, C2, C3])
@@ -86,7 +93,7 @@ def problematique_APP2():
         predictions, errors_indexes = ppv1.predict(feature, images.target, gen_output=True)
 
         error_rate = np.count_nonzero(images.target - np.resize(predictions, 980)) / 980 * 100
-
+        print(error_rate)
 
 
         # ppv5 = classifiers.PPVClassify_APP2(data2train=data3classes, n_neighbors=5,
@@ -122,6 +129,8 @@ def problematique_APP2():
         # plt.show()
         print("Done")
 
+    if False:
+        cov = images.get_cov()
     if False:
         n_layers = 6
         n_neurons = [3, 10, 9, 8, 7, 6]
