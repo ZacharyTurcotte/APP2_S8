@@ -50,6 +50,7 @@ class ClassificationData:
         # assignation des classes d'origine 0 à 2 pour C1 à C3 respectivement
         self.labels1array = np.zeros([self.ndata, 1])
         self.labelsLists = []
+        self.labelsLists_one_hot = []
         self.labelsLists.append(self.labels1array[range(len(self.dataLists[0]))])
         for i in range(1,self._x):
             self.labels1array[range(i * len(self.dataLists[i]), (i + 1) * len(self.dataLists[i]))] = i

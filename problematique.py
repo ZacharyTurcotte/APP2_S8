@@ -11,6 +11,7 @@ import helpers.analysis as an
 import helpers.classifiers as classifiers
 import helpers.classifiers
 from helpers.ClassificationData import ClassificationData
+from sklearn.preprocessing import OneHotEncoder
 import os
 
 from keras.optimizers import Adam
@@ -70,9 +71,9 @@ def problematique_APP2():
         an.view3D(data_to_view, images.target, "3D")
         dims = [mean_mean,cov,images.nb_edges]
 
-        [C1_train,C2_train,C3_train,C1_test,C2_test,C3_test] = images.split_data_PPV(200,dims)
+        [C1_train,C2_train,C3_train,C1_test,C2_test,C3_test] = images.split_data_PPV(250,dims)
 
-        images.nb_grey_pixels
+        #images.nb_grey_pixels
 
         min_len = np.min([len(C1_test),len(C2_test),len(C3_test)])
 
@@ -80,8 +81,16 @@ def problematique_APP2():
         data3classes_train = ClassificationData([C1_train, C2_train, C3_train])
         data3classes_test = ClassificationData([C1_test[:min_len,:], C2_test[:min_len,:], C3_test[:min_len,:]])
 
+        data3classes_test_label_encode = OneHotEncoder(sparse_output=False).fit_transform(data3classes_test.labels1array)
 
+        data3classes_train_label_encode = OneHotEncoder(sparse_output=False).fit_transform(data3classes_train.labels1array)
 
+        NN = classifiers.NNClassify_prob(data3classes_train,data3classes_test,6,[3,10,9,8,7,6,5],)
+
+        # def __init__(self, data2train, data2test, n_layers, n_neurons, innerActivation='tanh',
+        #              outputActivation='softmax',
+        #              optimizer=Adam(), loss='binary_crossentropy', metrics=None,
+        #              callback_list=None, n_epochs=1000, savename='',
         # ppv1 = classifiers.PPVClassifier(data3classes_train, n_neighbors=3, metric='minkowski',
         #                                  useKmean=True, n_represantants=9, experiment_title="1-PPV avec données orig comme représentants",
         #                                  view=False)
@@ -104,47 +113,53 @@ def problematique_APP2():
         #                                        gen_output=True, view=True)
 
         # plt.show()
-
-        n_neurons = [4,10,9,8,7,6]
-        n_layers = 6
-        # shuffledTrainData, shuffledTrainLabels, shuffledValidData, shuffledValidLabels = an.splitDataNN(3, data3classes, target)
-        # data3classes
-
-        model = Sequential()
-        model.add(Dense(units=3, activation='tanh',
-                        input_shape=(len(dims),)))
-        model.add(Dense(units=10, activation='tanh',
-                        ))
-        model.add(Dense(units=9, activation='tanh',
-                        ))
-        model.add(Dense(units=8, activation='tanh',
-                        ))
-        model.add(Dense(units=7, activation='tanh',
-                        ))
-        model.add(Dense(units=6, activation='tanh',
-                        ))
-        # model.add(Dense(units=40, activation='tanh',
-        #                input_shape=(data.shape[-1],)))
-        model.add(Dense(units=3, activation='sigmoid'))  #
-
-        print(model.summary())
-
-        model.compile(optimizer=SGD(learning_rate=0.1, momentum=0.01), loss='mse')
-        print("compile done")
-        model.fit(data3classes_train.data1array, data3classes_train.labels1array, batch_size=10, verbose=1,
-                  epochs=1000, shuffle=False)  # TODO Labo: ajouter les arguments pour le validation set
-        print("fit done")
-        # Save trained model to disk
-        model.save('saves' + os.sep + 'iris.keras')
-        print("save done")
-        an.plot_metrics(model)
-
-        # Test model (loading from disk)
-        model = load_model('saves' + os.sep + 'iris.keras')
-        targetPred = model.predict(data3classes_test.data1array)
-        print("predict done")
-        # Print the number of classification errors from the training data
-        error_indexes = an.calc_erreur_classification(np.argmax(targetPred, axis=-1), data3classes_test.labels1array, gen_output=True)
+        #
+        # n_neurons = [4,10,9,8,7,6]
+        # n_layers = 6
+        # # shuffledTrainData, shuffledTrainLabels, shuffledValidData, shuffledValidLabels = an.splitDataNN(3, data3classes, target)
+        # # data3classes
+        #
+        # model = Sequential()
+        # model.add(Dense(units=3, activation='tanh',
+        #                 input_shape=(len(dims),)))
+        # model.add(Dense(units=10, activation='tanh',
+        #                 ))
+        # model.add(Dense(units=10, activation='tanh',
+        #                 ))
+        # model.add(Dense(units=8, activation='tanh',
+        #                 ))
+        # model.add(Dense(units=8, activation='tanh',
+        #                 ))
+        # model.add(Dense(units=8, activation='tanh',
+        #                 ))
+        # model.add(Dense(units=8, activation='tanh',
+        #                 ))
+        # model.add(Dense(units=7, activation='tanh',
+        #                 ))
+        # model.add(Dense(units=6, activation='tanh',
+        #                 ))
+        #
+        # model.add(Dense(units=3, activation='softmax'))
+        #
+        # print(model.summary())
+        #
+        # model.compile(optimizer=Adam(), loss='binary_crossentropy',metrics=None)
+        # print("compile done")
+        #
+        # model.fit(data3classes_train.data1array,data3classes_train_label_encode, batch_size=10, verbose=1,
+        #           epochs=1000, shuffle=False)  # TODO Labo: ajouter les arguments pour le validation set
+        # print("fit done")
+        # # Save trained model to disk
+        # model.save('saves' + os.sep + 'iris.keras')
+        # print("save done")
+        # an.plot_metrics(model)
+        #
+        # # Test model (loading from disk)
+        # model = load_model('saves' + os.sep + 'iris.keras')
+        # targetPred = model.predict(data3classes_test.data1array)
+        # print("predict done")
+        # # Print the number of classification errors from the training data
+        # error_indexes = an.calc_erreur_classification(np.argmax(targetPred, axis=-1), data3classes_test_label_encode, gen_output=True)
 
         plt.show()
 

@@ -390,7 +390,7 @@ class NNClassifier:
         self.NNmodel.add(Dense(units=n_neurons[0], activation=innerActivation, input_shape=(self.traindata1array.shape[-1],)))
         for i in range(2, n_hidden_layers):
             self.NNmodel.add(Dense(units=n_neurons[i-1], activation=innerActivation))
-        self.NNmodel.add(Dense(units=self.trainlabels1array.shape[-1], activation=outputActivation))
+        self.NNmodel.add(Dense(units=3, activation=outputActivation))
         self.NNmodel.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         if gen_output:
             print(self.NNmodel.summary())
@@ -402,7 +402,7 @@ class NNClassifier:
         assert NNClassifier.NNstate.architecture in self.state
         if batch_size is None:
             batch_size = len(self.traindata1array)
-        self.NNmodel.fit(self.traindata1array, self.trainlabels1array, batch_size=batch_size, verbose=0,
+        self.NNmodel.fit(self.traindata1array, self.trainlabels1array, batch_size=batch_size, verbose=1,
                     epochs=n_epochs, shuffle=True, callbacks=callback_list,
                     validation_data=(self.validdata1array, self.validlabels1array))
 
@@ -450,6 +450,26 @@ class NNClassifier:
         else:
             errors_indexes = np.array([])
         return predictions, errors_indexes
+
+class NNClassify_prob:
+    def __init__(self, data2train, data2test, n_layers, n_neurons, innerActivation='tanh', outputActivation='softmax',
+                 optimizer=Adam(), loss='binary_crossentropy', metrics=None,
+                 callback_list=None, n_epochs=1000, savename='',
+                 experiment_title='NN Classifier', gen_output=False, view=True):
+
+        self.classifier = NNClassifier()
+        self.classifier.preprocess_training_data(dataLists=data2train.dataLists, labelsLists=data2train.labelsLists)
+        self.classifier.init_model(n_neurons, n_layers, innerActivation=innerActivation,
+                                   outputActivation=outputActivation, gen_output=gen_output,
+                                   optimizer=optimizer, loss=loss, metrics=metrics)
+
+        self.classifier.train_model(n_epochs, callback_list=callback_list, savename=savename, view=view)
+
+        self.predictTest, self.error_indexes = self.classifier.predict(testdata1array=data2test.data1array,
+                                                                       expected_labels1array=data2test.labels1array,
+                                                                       gen_output=gen_output)
+
+        #an.plot_metrics(self.classifier.NNmodel)
 
 
 class NNClassify_APP2:
