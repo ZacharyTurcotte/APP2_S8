@@ -86,7 +86,7 @@ def problematique_APP2():
                                              useKmean=True, n_represantants=9, experiment_title="1-PPV avec données orig comme représentants",
                                              view=False)
 
-        NN = classifiers.NNClassify_prob(data3classes_train,data3classes_test,6,[3,10,9,8,7,6,5],)
+
 
         # def __init__(self, data2train, data2test, n_layers, n_neurons, innerActivation='tanh',
         #              outputActivation='softmax',
@@ -109,6 +109,7 @@ def problematique_APP2():
         # Reseau de neuron
         ######################################################################
         if (choix_classificateur == 1):
+            NN = classifiers.NNClassify_prob(data3classes_train, data3classes_test, 6, [3, 10, 9, 8, 7, 6, 5], )
             n_neurons = [4,10,9,8,7,6]
             n_layers = 6
             # shuffledTrainData, shuffledTrainLabels, shuffledValidData, shuffledValidLabels = an.splitDataNN(3, data3classes, target)
