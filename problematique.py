@@ -145,15 +145,10 @@ def problematique_APP2():
             apriori = [1/3,1/3,1/3]
             costs = [[0, 1, 1], [1, 0, 1], [1, 1, 0]] # le cost nous permet d'avoir du control sur les frontières.
             # Bayes gaussien les apriori et coûts ne sont pas considérés pour l'instant
-            bg1 = classifiers.BayesClassifier(data3classes_train, classifiers.GaussianProbDensity, apriori=apriori, costs=costs)
+            bg1 = classifiers.BayesClassifier(data3classes_train, classifiers.HistProbDensity, apriori=apriori, costs=costs)
 
-            predictions, errors_indexes = bg1.predict(data3classes_test.data1array, data3classes_test.labels1array, gen_output=True)
-
-            error_rate = np.count_nonzero(images.target - np.resize(predictions, 980)) / 980 * 100
-            print(error_rate)
+            bg1.predict(data3classes_test.data1array, data3classes_test.labels1array, gen_output=True)
             plt.show()
-            plt.show()
-
 
         print("Done")
 
@@ -261,9 +256,6 @@ def problematique_APP2():
         images.view_histogrammes(im_list)
 
         # print(CD.)
-
-    # images.generateRepresentation()
-    plt.show()
 
 
 ######################################

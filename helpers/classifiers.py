@@ -79,8 +79,8 @@ class GaussianProbDensity:
     Predict à part -> computeProbaility
     """
     def __init__(self, data2train):
-        _, self.representationDimensions = np.asarray(data2train).shape
-        self.mean, self.cov, _, _ = an.calcModeleGaussien(data2train)
+        _, self.representationDimensions = np.asarray(data2train.dataLists).shape
+        self.mean, self.cov, _, _ = an.calcModeleGaussien(data2train.dataLists)
         self.det = np.linalg.det(self.cov)
         assert self.det  # Prévient les erreurs si det = 0, normalement impossible mais bon
         self.inv_cov = np.linalg.inv(self.cov)
@@ -95,7 +95,7 @@ class GaussianProbDensity:
         return 1 / np.sqrt(self.det * (2 * np.pi) ** self.representationDimensions) * np.exp(-mahalanobis / 2)
 
 
-class histProbDensity:
+class HistProbDensity:
     """
     Classe "virtuelle" appelée par BayesClassifier
     Modèle de classe arbitraire (histogramme)
@@ -111,7 +111,7 @@ class histProbDensity:
         for i in range(self.representationDimensions):
             print("xd")
 
-        self.hist, self.xedges, self.yedges = an.creer_hist2D(data2train, title=title, view=view)
+        self.hist, self.xedges, self.yedges = an.creer_hist2D(data2train.dataLists[:2], title=title, view=view)
 
     def computeProbability(self, testdata1array):
         testDataNSamples, testDataDimensions = np.asarray(testdata1array).shape
@@ -130,13 +130,13 @@ class BayesClassifier:
     Train() est intégré dans le constructeur, i.e. le constructeur calcule les modèles directement
     Predict est incomplet (ne tient pas compte du coût et des a priori
     """
-    def __init__(self, data2trainLists, probabilitydensityType=GaussianProbDensity, apriori=None, costs=None):
+    def __init__(self, data2train, probabilitydensityType=GaussianProbDensity, apriori=None, costs=None):
         """
         data2trainLists: correspond au format de listes de ClassificationData()
         probailitydensityType: pointeur à une des fonctions de probabilité voir ci-dessush
         """
         self.densities = []  # Liste des densités de prob de chaque classe
-        self.n_classes, _, self.representationDimensions = np.asarray(data2trainLists).shape
+        self.n_classes, _, self.representationDimensions = np.asarray(data2train.dataLists).shape
         #self.histo = histProbDensity(data2trainLists,title="histo 3D")
         if apriori:
             assert len(apriori) == self.n_classes
@@ -153,7 +153,7 @@ class BayesClassifier:
             self.costs = np.ones((self.n_classes, self.n_classes)) - np.identity(self.n_classes)
         # Training happens here, calcul des modèles pour chaque classe
         for i in range(self.n_classes):
-            self.densities.append(probabilitydensityType(data2trainLists[i]))
+            self.densities.append(probabilitydensityType(data2train.dataLists[i]))
 
     def predict(self, testdata1array, expected_labels1array=None, gen_output=False):
         """
