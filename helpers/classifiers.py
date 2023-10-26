@@ -429,7 +429,7 @@ class NNClassifier:
         assert NNClassifier.NNstate.trained in self.state
 
         testnsamples, testinputDimensions = np.asarray(testdata1array).shape
-        assert testinputDimensions == self.inputDimensions
+        #assert testinputDimensions == self.inputDimensions
         if np.asarray(expected_labels1array).any():
             if savename:
                 tempencoded = self.encoder.fit_transform(np.array(expected_labels1array).reshape(-1, 1)) #deja fait
@@ -466,7 +466,7 @@ class NNClassify_APP2:
                                    optimizer=optimizer, loss=loss, metrics=metrics)
         self.classifier.train_model(n_epochs, callback_list=callback_list, savename=savename, view=view)
         self.donneesTestRandom = an.genDonneesTest(ndonnees_random, data2train.extent)
-        self.predictRandom, _ = self.classifier.predict(testdata1array=self.donneesTestRandom)
+        #self.predictRandom, _ = self.classifier.predict(testdata1array=self.donneesTestRandom)
         self.predictTest, self.error_indexes = self.classifier.predict(testdata1array=data2test.data1array,
                                                                        expected_labels1array=data2test.labels1array,
                                                                        gen_output=gen_output)
