@@ -367,30 +367,35 @@ class ImageCollection:
         C2_train = []
         C3_train = []
 
-        C1_test = []
-        C2_test = []
-        C3_test = []
+        data = np.array(dims)
 
-        data = np.array([self.target,dims])
-
-        shuffled_data = np.random.shuffle(data)
+        C1 = []
+        C2 = []
+        C3 = []
 
         for i in np.arange(0, self.nb_images):
+            if self.target[i] == 0:
+                C1.append(data[:,i].T)
+            if self.target[i] == 1:
+                C2.append(data[:,i].T)
+            if self.target[i] == 2:
+                C3.append(data[:,i].T)
 
-            if shuffled_data[i,0] == 0:
-                C1_train.append(shuffled_data[i,1].T)
-            if shuffled_data[i,0] == 1:
-                C2_train.append(shuffled_data[i,1].T)
-            if shuffled_data[i,0] == 2:
-                C3_train.append(shuffled_data[i,1].T)
+        C1 = np.array(C1)
+        C2 = np.array(C2)
+        C3 = np.array(C3)
 
-        C1_train = C1_train[:split]
-        C2_train = C2_train[:split]
-        C3_train = C3_train[:split]
+        np.random.shuffle((C1))
+        np.random.shuffle((C2))
+        np.random.shuffle((C3))
 
-        C1_test = C1_train[split:-1]
-        C2_test = C2_train[split:-1]
-        C3_test = C3_train[split:-1]
+        C1_train = C1[:split]
+        C2_train = C2[:split]
+        C3_train = C3[:split]
+
+        C1_test = C1[split:-1]
+        C2_test = C2[split:-1]
+        C3_test = C3[split:-1]
 
         return [C1_train,C2_train,C3_train,C1_test,C2_test,C3_test]
 

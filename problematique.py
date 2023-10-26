@@ -52,8 +52,7 @@ def problematique_APP2():
         mean_mean = np.mean(images.mean_rgb, axis=1)
         # images.get_edge()
         #     homemade edge detection
-        edge_sum = images.edge_detection()
-        images.nb_edges = edge_sum
+        images.get_edge()
 
         # normaliser
         mean_mean, minMax_mean_rgm = an.scaleData(mean_mean)
@@ -66,34 +65,43 @@ def problematique_APP2():
         data_to_view[:, 1] = cov
         data_to_view[:, 2] = images.nb_edges
         an.view3D(data_to_view, images.target, "3D")
+        dims = [mean_mean,cov,images.nb_edges,images.nb_grey_pixels]
+
+        [C1_train,C2_train,C3_train,C1_test,C2_test,C3_test] = images.split_data_PPV(200,dims)
+
+        images.nb_grey_pixels
 
         # separer les classes
-        #C1 = [];C2 = [];C3 = []
-        dims = [mean_mean[i], cov[i], images.nb_edges[i],images.nb_grey_pixels]
-        [C1_train,C2_train,C3_train,C1_test,C2_test,C3_test] = images.split_data_PPV(200,dims)
+        # C1 = [];C2 = [];C3 = []
+        # for i in np.arange(0, images.nb_images):
+        #     if images.target[i] == 0:
+        #         C1.append(np.array([mean_mean[i], cov[i], images.nb_edges[i]],images.nb_grey_pixels).T)
+        #     if images.target[i] == 1:
+        #         C2.append(np.array([mean_mean[i], cov[i], images.nb_edges[i]],images.nb_grey_pixels).T)
+        #     if images.target[i] == 2:
+        #         C3.append(np.array([mean_mean[i], cov[i], images.nb_edges[i]],images.nb_grey_pixels).T)
 
         # prendre le meme nombre d'images pour chaque classes
         # smallest_class = np.min([len(C1), len(C2), len(C3)])
 
 
-
+        min_len = np.min([len(C1_test),len(C2_test),len(C3_test)])
 
         # print stats
-        data3classes = ClassificationData([C1, C2, C3])
+        data3classes_train = ClassificationData([C1_train, C2_train, C3_train])
+        data3classes_test = ClassificationData([C1_test[:min_len,:], C2_test[:min_len,:], C3_test[:min_len,:]])
 
 
 
-        ppv1 = classifiers.PPVClassifier(data3classes, n_neighbors=1, metric='minkowski',
-                                         useKmean=False, n_represantants=1, experiment_title="1-PPV avec données orig comme représentants",
+        ppv1 = classifiers.PPVClassifier(data3classes_train, n_neighbors=3, metric='minkowski',
+                                         useKmean=True, n_represantants=9, experiment_title="1-PPV avec données orig comme représentants",
                                          view=False)
 
-        feature = np.zeros((980, 3))
-        for i in np.arange(980):
-            feature[i, :] = [mean_mean[i], cov[i], images.nb_edges[i]]
-        predictions, errors_indexes = ppv1.predict(feature, images.target, gen_output=True)
 
-        error_rate = np.count_nonzero(images.target - np.resize(predictions, 980)) / 980 * 100
-        print(error_rate)
+        predictions, errors_indexes = ppv1.predict(data3classes_test.data1array, data3classes_test.labels1array, gen_output=True)
+
+        #error_rate = np.count_nonzero(images.target - np.resize(predictions, 980)) / 980 * 100
+        #print(error_rate)
 
 
         # ppv5 = classifiers.PPVClassify_APP2(data2train=data3classes, n_neighbors=5,
