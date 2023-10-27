@@ -107,19 +107,19 @@ class HistProbDensity:
         _, _, self.representationDimensions = np.asarray(data2train).shape
         self.extent = data2train.extent
         # TODO problématique: modifier la modélisation pour fonctionner avec une dimensionalité plus élevée
-
-        for i in range(self.representationDimensions):
-            print("xd")
-
-        self.hist, self.xedges, self.yedges = an.creer_hist2D(data2train.dataLists[:2], title=title, view=view)
+        nb_bins = 10
+        self.hist = np.histogramdd(data2train,bins=nb_bins)
+        print("Done")
+        #self.hist, self.xedges, self.yedges = an.creer_hist2D(data2train.dataLists[:2], title=title, view=view)
 
     def computeProbability(self, testdata1array):
         testDataNSamples, testDataDimensions = np.asarray(testdata1array).shape
         assert testDataDimensions == self.representationDimensions
         # TODO JB assert testdata within extent
         # TODO laboratoire: compléter le pseudocode et implémenter un calcul de probabilité
-        raise NotImplementedError()
-        return  # something to be computed
+        #raise NotImplementedError()
+        return
+        # something to be computed
 
 
 #############################################################################
@@ -153,7 +153,7 @@ class BayesClassifier:
             self.costs = np.ones((self.n_classes, self.n_classes)) - np.identity(self.n_classes)
         # Training happens here, calcul des modèles pour chaque classe
         for i in range(self.n_classes):
-            self.densities.append(probabilitydensityType(data2train.dataLists[i]))
+            self.densities.append(probabilitydensityType(data2train.data1array))
 
     def predict(self, testdata1array, expected_labels1array=None, gen_output=False):
         """
@@ -455,7 +455,7 @@ class NNClassify_prob:
     def __init__(self, data2train, data2test, n_layers, n_neurons, innerActivation='tanh', outputActivation='softmax',
                  optimizer=Adam(), loss='binary_crossentropy', metrics=None,
                  callback_list=None, n_epochs=1000, savename='',
-                 experiment_title='NN Classifier', gen_output=False, view=True):
+                 experiment_title='NN Classifier', gen_output=True, view=True):
 
         self.classifier = NNClassifier()
         self.classifier.preprocess_training_data(dataLists=data2train.dataLists, labelsLists=data2train.labelsLists)
@@ -468,7 +468,8 @@ class NNClassify_prob:
         self.predictTest, self.error_indexes = self.classifier.predict(testdata1array=data2test.data1array,
                                                                        expected_labels1array=data2test.labels1array,
                                                                        gen_output=gen_output)
-
+        print(self.predictTest)
+        print(self.error_indexes)
         #an.plot_metrics(self.classifier.NNmodel)
 
 

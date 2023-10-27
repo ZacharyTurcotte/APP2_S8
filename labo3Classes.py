@@ -23,7 +23,7 @@ def labo_APP2():
 
     data3classes = ClassificationData()
     # Changer le flag dans les sections pertinentes pour chaque partie de laboratoire
-    if True:
+    if False:
         # TODO Labo L1.E1.3 et L3.E1
         coefficent = helpers.classifiers.get_gaussian_borders(data3classes.dataLists)
         extent = an.Extent(-8,10,-8,10)
@@ -83,7 +83,7 @@ def labo_APP2():
                                                useKmean=True, n_representants=9,
                                                gen_output=True, view=True)
 
-    if False:  # TODO L3.E3
+    if True:  # TODO L3.E3
         # Exemple de classification bayésienne
         apriori = [1/3,1/3,1/3]
         cost = [[0, 1, 1], [1, 0, 1], [1, 1, 0]] # le cost nous permet d'avoir du control sur les frontières.

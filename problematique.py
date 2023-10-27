@@ -75,9 +75,9 @@ def problematique_APP2():
         data3classes_train = ClassificationData([C1_train, C2_train, C3_train])
         data3classes_test = ClassificationData([C1_test[:min_len,:], C2_test[:min_len,:], C3_test[:min_len,:]])
 
-        data3classes_test_label_encode = OneHotEncoder(sparse_output=False).fit_transform(data3classes_test.labels1array)
+        #data3classes_test_label_encode = OneHotEncoder(sparse_output=False).fit_transform(data3classes_test.labels1array)
 
-        data3classes_train_label_encode = OneHotEncoder(sparse_output=False).fit_transform(data3classes_train.labels1array)
+        #data3classes_train_label_encode = OneHotEncoder(sparse_output=False).fit_transform(data3classes_train.labels1array)
         ######################################################################
         # Kmeans, 1 PPV
         ######################################################################
@@ -109,49 +109,50 @@ def problematique_APP2():
         # Reseau de neuron
         ######################################################################
         if (choix_classificateur == 1):
-            NN = classifiers.NNClassify_prob(data3classes_train, data3classes_test, 6, [3, 10, 9, 8, 7, 6, 5], )
+            NN = classifiers.NNClassify_prob(data3classes_train, data3classes_test, 6, [3, 10, 9, 8, 7, 6, 5], gen_output=True )
             n_neurons = [4,10,9,8,7,6]
             n_layers = 6
             # shuffledTrainData, shuffledTrainLabels, shuffledValidData, shuffledValidLabels = an.splitDataNN(3, data3classes, target)
             # data3classes
 
-            model = Sequential()
-            model.add(Dense(units=3, activation='tanh',
-                            input_shape=(len(dims),)))
-            model.add(Dense(units=10, activation='tanh',
-                            ))
-            model.add(Dense(units=9, activation='tanh',
-                            ))
-            model.add(Dense(units=8, activation='tanh',
-                            ))
-            model.add(Dense(units=7, activation='tanh',
-                            ))
-            model.add(Dense(units=6, activation='tanh',
-                            ))
-            # model.add(Dense(units=40, activation='tanh',
-            #                input_shape=(data.shape[-1],)))
-            model.add(Dense(units=3, activation='sigmoid'))  #
-
-            print(model.summary())
-
-            model.compile(optimizer=SGD(learning_rate=0.1, momentum=0.01), loss='mse')
-            print("compile done")
-            model.fit(data3classes_train.data1array, data3classes_train.labels1array, batch_size=10, verbose=1,
-                      epochs=1000, shuffle=False)  # TODO Labo: ajouter les arguments pour le validation set
-            print("fit done")
-            # Save trained model to disk
-            model.save('saves' + os.sep + 'iris.keras')
-            print("save done")
-            an.plot_metrics(model)
-
-            # Test model (loading from disk)
-            model = load_model('saves' + os.sep + 'iris.keras')
-            targetPred = model.predict(data3classes_test.data1array)
-            print("predict done")
-            # Print the number of classification errors from the training data
-            error_indexes = an.calc_erreur_classification(np.argmax(targetPred, axis=-1), data3classes_test.labels1array, gen_output=True)
+            # model = Sequential()
+            # model.add(Dense(units=3, activation='tanh',
+            #                 input_shape=(len(dims),)))
+            # model.add(Dense(units=10, activation='tanh',
+            #                 ))
+            # model.add(Dense(units=9, activation='tanh',
+            #                 ))
+            # model.add(Dense(units=8, activation='tanh',
+            #                 ))
+            # model.add(Dense(units=7, activation='tanh',
+            #                 ))
+            # model.add(Dense(units=6, activation='tanh',
+            #                 ))
+            # # model.add(Dense(units=40, activation='tanh',
+            # #                input_shape=(data.shape[-1],)))
+            # model.add(Dense(units=3, activation='sigmoid'))  #
+            #
+            # print(model.summary())
+            #
+            # model.compile(optimizer=SGD(learning_rate=0.1, momentum=0.01), loss='mse')
+            # print("compile done")
+            # model.fit(data3classes_train.data1array, data3classes_train.labels1array, batch_size=10, verbose=1,
+            #           epochs=1000, shuffle=False)  # TODO Labo: ajouter les arguments pour le validation set
+            # print("fit done")
+            # # Save trained model to disk
+            # model.save('saves' + os.sep + 'iris.keras')
+            # print("save done")
+            # an.plot_metrics(model)
+            #
+            # # Test model (loading from disk)
+            # model = load_model('saves' + os.sep + 'iris.keras')
+            # targetPred = model.predict(data3classes_test.data1array)
+            # print("predict done")
+            # # Print the number of classification errors from the training data
+            # error_indexes = an.calc_erreur_classification(np.argmax(targetPred, axis=-1), data3classes_test.labels1array, gen_output=True)
 
             plt.show()
+            print("D0ne")
 
         ######################################################################
         # Bayes
