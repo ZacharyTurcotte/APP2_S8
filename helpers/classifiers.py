@@ -137,14 +137,15 @@ class HistProbDensity:
                 coord[i, j] = int(np.floor(testdata1array[i][j]/bin_width) + self.nb_bins / 2)
         # [0, 2, 5]  ->  [0][2][5]
 
-        prob = []
+        self.prob = []
         for img in range(len(testdata1array)):
             for hist in range(3):
-                prob.append(self.histogrammes[hist][0][coord[img][0]][coord[img][1]][coord[img][2]])
+                # TODO À P-O -> REMOVE HARD CODE LOLOL
+                self.prob.append(self.histogrammes[hist][0][coord[img][0]][coord[img][1]][coord[img][2]])
 
-        declassification_results = np.argmax(np.reshape(prob, (123,3)), axis=1)
+        #declassification_results = np.argmax(np.reshape(prob, (123,3)), axis=1)
 
-        return declassification_results
+        return np.array(self.prob).reshape(testDataNSamples, 3)
 
     # def fetch_nested_array(self, indexes, nested_array):
     #     result = nested_array
@@ -192,17 +193,19 @@ class BayesClassifier:
         """
         testDataNSamples, testDataDimensions = np.asarray(testdata1array).shape
         assert testDataDimensions == self.representationDimensions
-        classProbDensities = []
+        #classProbDensities = []
 
         # calcule la valeur de la probabilité d'appartenance à chaque classe pour les données à tester
-        classification_result = self.densities.computeProbability(testdata1array)
+        self.classification_result = self.densities.computeProbability(testdata1array)
 
-        error_rate = np.count_nonzero(classification_result-expected_labels1array.T) / 123 * 100
+        #error_rate = np.count_nonzero(classification_result-expected_labels1array.T) / 123 * 100
 
 
         # TODO problematique: take apriori and cost into consideration! here for risk computation argmax assumes equal costs and apriori
         # a change, prendre le argmin car on minimise l'erreur (Zach)
-        classProbDensities = classProbDensities@self.costs*self.apriori
+
+        classProbDensities = self.classification_result@self.costs*self.apriori
+
         predictions = np.argmin(classProbDensities, axis=1).reshape(testDataNSamples, 1)
         #predictions = np.argmin(classProbDensities)#.reshape(testDataNSamples, 1)
         if np.asarray(expected_labels1array).any():
