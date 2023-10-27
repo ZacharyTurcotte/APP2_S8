@@ -104,22 +104,53 @@ class HistProbDensity:
     Predict à part -> computeProbaility
     """
     def __init__(self, data2train, title='', view=False):
-        _, _, self.representationDimensions = np.asarray(data2train).shape
+        _, _, self.representationDimensions = np.asarray(data2train.dataLists).shape
         self.extent = data2train.extent
         # TODO problématique: modifier la modélisation pour fonctionner avec une dimensionalité plus élevée
-        nb_bins = 10
-        self.hist = np.histogramdd(data2train,bins=nb_bins)
-        print("Done")
-        #self.hist, self.xedges, self.yedges = an.creer_hist2D(data2train.dataLists[:2], title=title, view=view)
+        rng = []
+        self.nb_bins = 8
+        self.histogrammes = []
+        self.hist_range = (-1, 1)
+        for i in range(self.representationDimensions): rng.append(self.hist_range)
+
+        for i in range(self.representationDimensions):
+            self.histogrammes.append(np.histogramdd(data2train.dataLists[i],bins=self.nb_bins, density=False, range=rng))
 
     def computeProbability(self, testdata1array):
-        testDataNSamples, testDataDimensions = np.asarray(testdata1array).shape
+        testDataNSamples, testDataDimensions = np.asarray(testdata1array).shape # (123, 3)
         assert testDataDimensions == self.representationDimensions
-        # TODO JB assert testdata within extent
-        # TODO laboratoire: compléter le pseudocode et implémenter un calcul de probabilité
-        #raise NotImplementedError()
-        return
-        # something to be computed
+        '''
+        pour chaque images 
+        pour chaque dimentions
+        determiner l'appartenance de chaque bin
+            transformer le test data en coordonee ()
+            regarder la valeur dans les 3 histo a cette coordonee
+            classer l'image selon l'histogramme ayant la plpus haute valeure
+        
+        
+        '''
+        bin_width = (self.hist_range[1] - self.hist_range[0]) / self.nb_bins
+        coord = np.zeros((testDataNSamples, testDataDimensions), dtype=int)
+
+        for i in range(testDataNSamples):
+            for j in range(testDataDimensions):
+                coord[i, j] = int(np.floor(testdata1array[i][j]/bin_width) + self.nb_bins / 2)
+        # [0, 2, 5]  ->  [0][2][5]
+
+        prob = []
+        for img in range(len(testdata1array)):
+            for hist in range(3):
+                prob.append(self.histogrammes[hist][0][coord[img][0]][coord[img][1]][coord[img][2]])
+
+        declassification_results = np.argmax(np.reshape(prob, (123,3)), axis=1)
+
+        return declassification_results
+
+    # def fetch_nested_array(self, indexes, nested_array):
+    #     result = nested_array
+    #     for index in indexes:
+    #         result = result[index]
+    #     return result
 
 
 #############################################################################
@@ -135,7 +166,7 @@ class BayesClassifier:
         data2trainLists: correspond au format de listes de ClassificationData()
         probailitydensityType: pointeur à une des fonctions de probabilité voir ci-dessush
         """
-        self.densities = []  # Liste des densités de prob de chaque classe
+        #self.densities = []  # Liste des densités de prob de chaque classe
         self.n_classes, _, self.representationDimensions = np.asarray(data2train.dataLists).shape
         #self.histo = histProbDensity(data2trainLists,title="histo 3D")
         if apriori:
@@ -152,8 +183,7 @@ class BayesClassifier:
         else:
             self.costs = np.ones((self.n_classes, self.n_classes)) - np.identity(self.n_classes)
         # Training happens here, calcul des modèles pour chaque classe
-        for i in range(self.n_classes):
-            self.densities.append(probabilitydensityType(data2train.data1array))
+        self.densities = probabilitydensityType(data2train)
 
     def predict(self, testdata1array, expected_labels1array=None, gen_output=False):
         """
@@ -163,11 +193,13 @@ class BayesClassifier:
         testDataNSamples, testDataDimensions = np.asarray(testdata1array).shape
         assert testDataDimensions == self.representationDimensions
         classProbDensities = []
+
         # calcule la valeur de la probabilité d'appartenance à chaque classe pour les données à tester
-        for i in range(self.n_classes):  # itère sur toutes les classes
-            classProbDensities.append(self.densities[i].computeProbability(testdata1array))
-        # reshape pour que les lignes soient les calculs pour 1 point original, i.e. même disposition que l'array d'entrée
-        classProbDensities = np.array(classProbDensities).T
+        classification_result = self.densities.computeProbability(testdata1array)
+
+        error_rate = np.count_nonzero(classification_result-expected_labels1array.T) / 123 * 100
+
+
         # TODO problematique: take apriori and cost into consideration! here for risk computation argmax assumes equal costs and apriori
         # a change, prendre le argmin car on minimise l'erreur (Zach)
         classProbDensities = classProbDensities@self.costs*self.apriori
