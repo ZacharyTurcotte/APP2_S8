@@ -51,6 +51,7 @@ import numpy as np
 from enum import Flag, auto
 import pickle
 import os
+import matplotlib.pyplot as plt
 
 from sklearn.cluster import KMeans as KM
 from sklearn.neighbors import KNeighborsClassifier as KNN
@@ -103,17 +104,17 @@ class HistProbDensity:
     Train intégré dans le constructeur
     Predict à part -> computeProbaility
     """
-    def __init__(self, data2train, title='', view=False):
+    def __init__(self, data2train, title='', view=False,nb_bins=8):
         _, _, self.representationDimensions = np.asarray(data2train.dataLists).shape
         self.extent = data2train.extent
         # TODO problématique: modifier la modélisation pour fonctionner avec une dimensionalité plus élevée
         rng = []
-        self.nb_bins = 8
+        self.nb_bins = nb_bins
         self.histogrammes = []
         self.hist_range = (-1, 1)
         for i in range(self.representationDimensions): rng.append(self.hist_range)
 
-        for i in range(self.representationDimensions):
+        for i in range(3):
             self.histogrammes.append(np.histogramdd(data2train.dataLists[i],bins=self.nb_bins, density=False, range=rng))
 
     def computeProbability(self, testdata1array):
@@ -134,14 +135,18 @@ class HistProbDensity:
 
         for i in range(testDataNSamples):
             for j in range(testDataDimensions):
-                coord[i, j] = int(np.floor(testdata1array[i][j]/bin_width) + self.nb_bins / 2)
+                temp = int(np.floor((testdata1array[i][j]+1)/bin_width))
+                if temp == self.nb_bins:
+                    coord[i, j] = temp-1
+                else:
+                    coord[i,j] = temp
         # [0, 2, 5]  ->  [0][2][5]
 
         self.prob = []
         for img in range(len(testdata1array)):
             for hist in range(3):
                 # TODO À P-O -> REMOVE HARD CODE LOLOL
-                self.prob.append(self.histogrammes[hist][0][coord[img][0]][coord[img][1]][coord[img][2]])
+                self.prob.append(self.histogrammes[hist][0][coord[img][0]][coord[img][1]][coord[img][2]])#[coord[img][4]][coord[img][5]])
 
         #declassification_results = np.argmax(np.reshape(prob, (123,3)), axis=1)
 
@@ -162,7 +167,7 @@ class BayesClassifier:
     Train() est intégré dans le constructeur, i.e. le constructeur calcule les modèles directement
     Predict est incomplet (ne tient pas compte du coût et des a priori
     """
-    def __init__(self, data2train, probabilitydensityType=GaussianProbDensity, apriori=None, costs=None):
+    def __init__(self, data2train, probabilitydensityType=GaussianProbDensity, nb_bins=8,apriori=None, costs=None):
         """
         data2trainLists: correspond au format de listes de ClassificationData()
         probailitydensityType: pointeur à une des fonctions de probabilité voir ci-dessush
@@ -184,7 +189,7 @@ class BayesClassifier:
         else:
             self.costs = np.ones((self.n_classes, self.n_classes)) - np.identity(self.n_classes)
         # Training happens here, calcul des modèles pour chaque classe
-        self.densities = probabilitydensityType(data2train)
+        self.densities = probabilitydensityType(data2train,nb_bins=nb_bins)
 
     def predict(self, testdata1array, expected_labels1array=None, gen_output=False):
         """
@@ -264,6 +269,8 @@ class PPVClassifier:
             reprLabel = data2train.labels1array
         # train est dans le constructeur ici aussi
         self.kNN.fit(reprData, reprLabel.ravel())  # initialise les représentants avec leur label de classe
+        self.donneesTestRandom = an.genDonneesTest(5000,data2train.extent)
+
 
     def predict(self, testdata1array, expected_labels1array=None, gen_output=False):
         _, testDataDimensions = np.asarray(testdata1array).shape
@@ -279,11 +286,11 @@ class PPVClassifier:
 
 class PPVClassify_APP2:
     def __init__(self, data2train, data2test=None, n_neighbors=1, metric='minkowski', ndonnees_random=5000,
-                 useKmean=False, n_representants=1,
+                 useKmean=False, n_represantants=1,
                  experiment_title='PPV Classifier', gen_output=False, view=False):
         print('\n\n=========================\nNouveau classificateur: '+experiment_title)
         self.classifier = PPVClassifier(data2train, n_neighbors=n_neighbors, metric=metric,
-                                        useKmean=useKmean, n_represantants=n_representants, experiment_title=experiment_title,
+                                        useKmean=useKmean, n_represantants=n_represantants, experiment_title=experiment_title,
                                         view=True)
         self.donneesTestRandom = an.genDonneesTest(ndonnees_random, data2train.extent)
         self.predictRandom, _ = self.classifier.predict(self.donneesTestRandom)  # classifie les données de test
@@ -488,8 +495,8 @@ class NNClassifier:
 
 class NNClassify_prob:
     def __init__(self, data2train, data2test, n_layers, n_neurons, innerActivation='tanh', outputActivation='softmax',
-                 optimizer=Adam(), loss='binary_crossentropy', metrics=None,
-                 callback_list=None, n_epochs=1000, savename='',
+                 optimizer=Adam(learning_rate=0.001), loss='binary_crossentropy', metrics=None,
+                 callback_list=None, n_epochs=2000, savename='',
                  experiment_title='NN Classifier', gen_output=True, view=True):
 
         self.classifier = NNClassifier()
@@ -502,9 +509,24 @@ class NNClassify_prob:
 
         self.predictTest, self.error_indexes = self.classifier.predict(testdata1array=data2test.data1array,
                                                                        expected_labels1array=data2test.labels1array,
-                                                                       gen_output=gen_output)
+                                                                       gen_output=gen_output,savename=savename)
+
+        idx = an.calc_erreur_classification(self.predictTest,data2test.labels1array,gen_output=True)
+        print(idx)
         print(self.predictTest)
         print(self.error_indexes)
+
+        random_data = np.random.uniform(-1, 1, size=(5000, 3))
+        predictions_random,errors_indexes = self.classifier.predict(testdata1array=random_data,
+                                gen_output=gen_output)
+
+        fig = plt.figure(69)
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(random_data[:, 0], random_data[:, 1], random_data[:, 2], c=predictions_random)
+        ax.set_xlabel('Couleur moyenne')
+        ax.set_ylabel('Covariance')
+        ax.set_zlabel('Nombre de limites (edges)')
+        plt.show()
         #an.plot_metrics(self.classifier.NNmodel)
 
 

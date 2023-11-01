@@ -2,7 +2,7 @@
 Script de départ de la problématique
 Problématique APP2 Module IA S8
 """
-
+import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 from helpers.ImageCollection import ImageCollection
@@ -25,47 +25,60 @@ import helpers.ClassificationData as CD
 
 #######################################
 def problematique_APP2():
-    print("xd")
+
     # im_list = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dtype=int) + 100
     # im_list = np.array([0, 1, 4, 2, 8, 9, 3,38,39], dtype=int)
-    images = ImageCollection()
+    #images = ImageCollection()
     # images = ImageCollection(im_list)
 
     #im_list = np.array([100, 110, 450, 500, 600, 700, 800, 900, 950, 50], dtype=int) + 0
     im_list = np.arange(0,980,5)
-    images = ImageCollection(load_img=None)
-    print("d")
-
-    # 0 = kmean
+    images = ImageCollection(load_img=None) # on peut ajouter une liste d'index pour loader des images en particulier et non toutes
+    print("Done loading images")
+    # 0 = k mean
     # 1 = NN
     # 2 = Bayes
-    choix_classificateur = 2
-
+    choix_classificateur = 0 #endroit ou change quel classificateur on veut
+    grey_pixel = images.count_grey_pixel()
     if True:
         # calculs
-        images.count_rgb_pixel()
-        images.count_lab_pixel()
-        cov = images.get_cov()
-        mean_mean = np.mean(images.mean_rgb, axis=1)
-        images.get_edge()
-        # homemade edge detection
-        # edge_sum = images.edge_detection()
-        # images.nb_edges = edge_sum
+        if True:
+            images.count_rgb_pixel()
+            images.count_lab_pixel()
+            cov = images.get_cov()
+            mean_mean = np.mean(images.mean_rgb, axis=1)
+            images.get_edge()
+            #edges = images.edge_detection(view=False)
+            images.get_lightness()
+            # homemade edge detection
+            # edge_sum = images.edge_detection()
+            # images.nb_edges = edge_sum
 
-        # normaliser
-        mean_mean, minMax_mean_rgm = an.scaleData(mean_mean)
-        cov, minMax_cov = an.scaleData(cov)
-        images.nb_edges, minMax_nb_edges = an.scaleData(images.nb_edges)
+            # normaliser
+            mean_mean, minMax_mean_rgm = an.scaleData(mean_mean)
+            cov, minMax_cov = an.scaleData(cov)
+            edges, minMax_nb_edges = an.scaleData(images.nb_edges)
+            #edges,_ = an.scaleData(edges)
+            grey_pixel_norm,_ = an.scaleData(grey_pixel)
+            #green_pixel_norm,_ = an.scaleData(images.nb_green_pixels_lab)
+            #lightness,_ = an.scaleData(images.lightness)
+            #  view data 3d
+            data_to_view = np.zeros((images.nb_images, 3))
+            data_to_view[:, 0] = mean_mean
+            data_to_view[:, 1] = cov
+            data_to_view[:, 2] = edges
+            an.view3D(data_to_view, images.target, "3D")
+            #plt.show()
+            dims = [mean_mean,cov,edges]
 
-        #  view data 3d
-        data_to_view = np.zeros((images.nb_images, 3))
-        data_to_view[:, 0] = mean_mean
-        data_to_view[:, 1] = cov
-        data_to_view[:, 2] = images.nb_edges
-        an.view3D(data_to_view, images.target, "3D")
-        dims = [mean_mean,cov,images.nb_edges]
+            #with open('my_arrays.pkl', 'wb') as file:
+             #   pickle.dump(dims, file)
+        print("allo")
+        #with open('my_arrays.pkl', 'rb') as file:
+        #    dims = pickle.load(file)
 
-        [C1_train,C2_train,C3_train,C1_test,C2_test,C3_test] = images.split_data_PPV(250,dims)
+        [C1_train,C2_train,C3_train,C1_test,C2_test,C3_test] = images.split_data(250,dims)
+        #split les données également car ClassificationData ne fonctionne pas autrement.
 
         #images.nb_grey_pixels
 
@@ -82,9 +95,10 @@ def problematique_APP2():
         # Kmeans, 1 PPV
         ######################################################################
         if choix_classificateur == 0:
-            ppv1 = classifiers.PPVClassifier(data3classes_train, n_neighbors=3, metric='minkowski',
-                                             useKmean=True, n_represantants=9, experiment_title="1-PPV avec données orig comme représentants",
-                                             view=False)
+
+            ppv1 = classifiers.PPVClassifier(data3classes_train, n_neighbors=3, metric='minkowski', #mettre n=2 donc euclide
+                                             useKmean=True, n_represantants=3, experiment_title="1-PPV avec données orig comme représentants",
+                                             view=True)
 
 
 
@@ -98,58 +112,37 @@ def problematique_APP2():
         #
         #
         # predictions, errors_indexes = ppv1.predict(data3classes_test.data1array, data3classes_test.labels1array, gen_output=True)
+            #predictTest = []
+            #error_indexes = []
 
             predictions, errors_indexes = ppv1.predict(data3classes_test.data1array, data3classes_test.labels1array, gen_output=True)
+
+            random_data = np.random.uniform(-1, 1, size=(5000,3))
+            predictions_random,errors_indexes = ppv1.predict(random_data, gen_output=True)
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter(random_data[:,0],random_data[:,1],random_data[:,2],c=predictions_random)
+            ax.set_xlabel('Couleur moyenne')
+            ax.set_ylabel('Covariance')
+            ax.set_zlabel('Nombre de limites (edges)')
 
             error_rate = np.count_nonzero(images.target - np.resize(predictions, 980)) / 980 * 100
             print(error_rate)
             plt.show()
+            print("Done")
+
+
 
         ######################################################################
         # Reseau de neuron
         ######################################################################
         if (choix_classificateur == 1):
-            NN = classifiers.NNClassify_prob(data3classes_train, data3classes_test, 6, [3, 10, 9, 8, 7, 6, 5], gen_output=True )
-            n_neurons = [4,10,9,8,7,6]
-            n_layers = 6
-            # shuffledTrainData, shuffledTrainLabels, shuffledValidData, shuffledValidLabels = an.splitDataNN(3, data3classes, target)
-            # data3classes
-
-            # model = Sequential()
-            # model.add(Dense(units=3, activation='tanh',
-            #                 input_shape=(len(dims),)))
-            # model.add(Dense(units=10, activation='tanh',
-            #                 ))
-            # model.add(Dense(units=9, activation='tanh',
-            #                 ))
-            # model.add(Dense(units=8, activation='tanh',
-            #                 ))
-            # model.add(Dense(units=7, activation='tanh',
-            #                 ))
-            # model.add(Dense(units=6, activation='tanh',
-            #                 ))
-            # # model.add(Dense(units=40, activation='tanh',
-            # #                input_shape=(data.shape[-1],)))
-            # model.add(Dense(units=3, activation='sigmoid'))  #
-            #
-            # print(model.summary())
-            #
-            # model.compile(optimizer=SGD(learning_rate=0.1, momentum=0.01), loss='mse')
-            # print("compile done")
-            # model.fit(data3classes_train.data1array, data3classes_train.labels1array, batch_size=10, verbose=1,
-            #           epochs=1000, shuffle=False)  # TODO Labo: ajouter les arguments pour le validation set
-            # print("fit done")
-            # # Save trained model to disk
-            # model.save('saves' + os.sep + 'iris.keras')
-            # print("save done")
-            # an.plot_metrics(model)
-            #
-            # # Test model (loading from disk)
-            # model = load_model('saves' + os.sep + 'iris.keras')
-            # targetPred = model.predict(data3classes_test.data1array)
-            # print("predict done")
-            # # Print the number of classification errors from the training data
-            # error_indexes = an.calc_erreur_classification(np.argmax(targetPred, axis=-1), data3classes_test.labels1array, gen_output=True)
+            NN = classifiers.NNClassify_prob(data3classes_train, data3classes_test, 6,
+                                             [3, 10, 10, 10, 10, 10, 10, 10, 8 , 8, 10,10,6,6,6,6,6,6,6,6,6], #nombre de neurone par couches
+                                             gen_output=True,n_epochs=2500,metrics=['accuracy'],
+                                             callback_list=[K.callbacks.EarlyStopping(patience=50,verbose=1,restore_best_weights=True),
+                                                         classifiers.print_every_N_epochs(25)])
 
             plt.show()
             print("D0ne")
@@ -159,15 +152,34 @@ def problematique_APP2():
         ######################################################################
         if choix_classificateur == 2:
             ## bayes
+            random_data1 = np.random.uniform(-0.5, 0.5, size=(5000, 1))
+            random_data2 = np.random.uniform(-0.75,0.25,size=(5000,1))
+            random_data3 = np.random.uniform(-1,1,size=(5000,1))
+            random_data = np.random.uniform(-0.5,0.5,size=(5000,3))
+            #random_data = np.concatenate((random_data1,random_data2,random_data3),axis=1).reshape((5000,3))
 
-            apriori = [1/3,1/3,1/3]
-            costs = [[0, 1, 1], [1, 0, 1], [1, 1, 0]] # le cost nous permet d'avoir du control sur les frontières.
+            apriori =  [1/3,1/3,1/3]
+            costs = [[0, 1, 1], [2, 0, 1], [2, 1, 0]] # le cost nous permet d'avoir du control sur les frontières.
             # Bayes gaussien les apriori et coûts ne sont pas considérés pour l'instant
-            bg1 = classifiers.BayesClassifier(data3classes_train, classifiers.HistProbDensity, apriori=apriori, costs=costs)
+            bg1 = classifiers.BayesClassifier(data3classes_train, classifiers.HistProbDensity, nb_bins=10,apriori=apriori, costs=costs)
 
             bg1.predict(data3classes_test.data1array, data3classes_test.labels1array, gen_output=True)
-            plt.show()
+            prediction_random, error_random = bg1.predict(random_data)
 
+            mini = -1
+            maxi = 1
+
+            fig = plt.figure()
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter(random_data[:,0],random_data[:, 1], random_data[:, 2], c=prediction_random)
+            ax.set_xlabel('Couleur moyenne')
+            ax.set_ylabel('Covariance')
+            ax.set_zlabel('Nombre de limites (edges)')
+            # ax.set_xlim(mini, maxi)
+            # ax.set_ylim(mini, maxi)
+            # ax.set_zlim(mini, maxi)
+            plt.show()
+            print("Done")
         print("Done")
 
     if False:

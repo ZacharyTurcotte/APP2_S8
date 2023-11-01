@@ -386,6 +386,7 @@ def view3D(data3D, targets, title):
     ax.set_xlabel('First component')
     ax.set_ylabel('Second component')
     ax.set_zlabel('Third component')
+    ax.legend()
     fig.tight_layout()
 
 

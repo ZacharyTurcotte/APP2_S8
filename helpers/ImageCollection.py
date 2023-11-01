@@ -154,8 +154,12 @@ class ImageCollection:
         self.blue_green_diff = np.zeros(self.nb_images)
 
         self.nb_grey_pixels = np.zeros(self.nb_images)
+        self.lightness = np.zeros(self.nb_images)
     def get_samples(self, N):
         return np.sort(random.sample(range(np.size(self.image_list, 0)), N))
+
+    #def count_grey_pixel(self):
+
 
     def count_rgb_pixel(self):
         for i in range(self.nb_images):
@@ -167,16 +171,15 @@ class ImageCollection:
     def count_lab_pixel(self):
         for i in range(self.nb_images):
             lab = np.reshape(self.lab[i], (256 * 256, 3))
-            self.nb_green_pixels_lab[i] = np.sum(np.array(lab[:, 1]) <= 0, axis=0)
+            self.nb_green_pixels_lab[i] = np.sum(np.array(lab[:, 1]) <= -10.0)
             self.nb_red_pixels_lab[i] = np.sum(np.array(lab[:, 1]) > 0, axis=0)
             self.nb_blue_pixels_lab[i] = np.sum(np.array(lab[:, 2]) <= 0, axis=0)
             self.nb_yellow_pixels_lab[i] = np.sum(np.array(lab[:, 2]) > 0, axis=0)
 
-    def get_edge(self, view=False):
+    def get_edge(self, view=False): #implémentation illégale mais qui roule vite donc nous utilisons cellui la.
 
         for i in range(self.nb_images):
             grayscale = cv2.cvtColor(self.images[i], cv2.COLOR_BGR2GRAY)
-            # cv2.imshow('Grayscale', grayscale)
             edges = cv2.Canny(grayscale, 100, 200)
             if view:
                 plt.figure(2 * i)
@@ -186,23 +189,28 @@ class ImageCollection:
             self.nb_edges.append(np.sum(edges))
         # plt.show()
 
-    def edge_detection(self):
+    def edge_detection(self,view=False): #implémentation légal de edge détection utilisaant uniquement numpy
+        #source wikipedia de sobel pour les kernel x et y
         edge_sum = np.zeros(self.nb_images)
-        kernel_x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
-        kernel_y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
+        x = np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
+        y = np.array([[-1, -2, -1], [0, 0, 0], [1, 2, 1]])
 
         for i in range(self.nb_images):
             grayscale = np.array(cv2.cvtColor(self.images[i], cv2.COLOR_BGR2GRAY)).flatten()
 
-            # Apply convolution with the Sobel kernels
-            edges_x = np.abs(np.convolve(grayscale, kernel_x.flatten(), mode='same').reshape(grayscale.shape))
-            edges_y = np.abs(np.convolve(grayscale, kernel_y.flatten(), mode='same').reshape(grayscale.shape))
+            edges_x = np.convolve(grayscale, x.flatten(), mode='same').reshape(grayscale.shape)
+            edges_y = np.convolve(grayscale, y.flatten(), mode='same').reshape(grayscale.shape)
 
-            # Combine horizontal and vertical edges
             self.edges[:, i] = (np.sqrt(edges_x**2 + edges_y**2))
-            self.edges[self.edges < 50] = 0
-            edge_sum[i] = np.sum(self.edges[:, i].reshape(256 * 256))
-            print(i)
+            self.edges[self.edges[:,i] < 20] = 0 #threshold
+
+            edge_sum[i] = np.sum(self.edges[:, i])#.reshape(256 * 256))
+
+            if view:
+                plt.figure(69)
+                plt.imshow(self.edges[:,i].reshape((256,256)),cmap="gray")
+                plt.show()
+            print(i) # pour voir à quelles images nous sommes rendu
 
         return edge_sum
 
@@ -211,26 +219,9 @@ class ImageCollection:
 
         for image in self.images:
             image = (cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)) # convert images into [255][255]
-            # image_left = image[:, :128]
-            # image_right = np.flip(image[:, 128:], 0) # horiz flip
-            #
-            # mean_left = np.mean(image_left)
-            # mean_right = np.mean(image_right)
-            #
-            # left_centered = image_left - mean_left
-            # right_centered = image_right - mean_right
-            #
-            # cov = np.dot(left_centered.T, right_centered) / (image_left.shape[0] - 1)
-            # print(cov)
-
-
-            # Créer une version miroir de l'image
-
             mirrored_image = cv2.flip(image, 1)  # 1 pour une réflexion horizontale
-
-            # Comparer l'image originale à son miroir
-
-            symmetry_difference = cv2.absdiff(image, mirrored_image)
+            symmetry_difference = cv2.absdiff(image, mirrored_image) #np.abs(image-mirroed-image) implémenter avec openCV pour la vitesse.
+            #très simple
 
             mean_diff = np.mean(symmetry_difference)
             images.append(mean_diff)
@@ -281,6 +272,18 @@ class ImageCollection:
         self.lab.append(imageLab)
         self.hsv.append(imageHVS)
 
+    def count_grey_pixel(self):
+        pixel = np.zeros(256*256)
+        nb_pixel_gris = np.zeros(self.nb_images)
+        for i in range(self.nb_images):
+            lab= np.reshape(np.array(self.lab[i],dtype="float"),(256*256,3))
+
+            pixel = np.sqrt(lab[:,1]**2+lab[:,2]**2)
+            nb_pixel_gris[i] = np.sum(pixel<20)
+
+        return nb_pixel_gris
+
+
     def classify(self, idx):
         if 0 <= idx < 360:
             return 0
@@ -329,7 +332,7 @@ class ImageCollection:
     def get_lightness(self):
         for i in range(self.nb_images):
             lab = np.reshape(self.lab[i],(256*256,3))
-            self.lightness[i] = np.sum(lab[:,0])
+            self.lightness[i] = np.sum(lab[0:32768,0])
 
     def get_rgb_lab_hsv_std(self):
 
@@ -361,8 +364,8 @@ class ImageCollection:
         self.std_lab.append(std_lab)
         self.std_hsv.append(std_hsv)
 
-    def split_data_PPV(self,split,dims):
-
+    def split_data(self,split,dims):
+        # split les données en 3 grosseur égales égales car ClassificationData prend 3 array de meme dim
         C1_train = []
         C2_train = []
         C3_train = []

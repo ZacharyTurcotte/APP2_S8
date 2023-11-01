@@ -37,7 +37,7 @@ def labo_APP2():
         # exemple d'une densité de probabilité arbitraire pour 1 classe
         an.creer_hist2D(data3classes.dataLists[0], 'C1', view=True,nbinx=30,nbiny=30)
         # an.view_classes()
-    if False:
+    if True:
         # Décorrélation
         # TODO Labo L1.E3.5
         data3classesDecorr = ClassificationData(an.project_onto_new_basis(data3classes.dataLists, data3classes.vectpr[0]))
@@ -48,7 +48,7 @@ def labo_APP2():
 
     if False: # TODO Labo L2.E4
         # Exemple de RN
-        n_neurons = 10
+        n_neurons = [3,10,10,10,10,10,10,10,10]
         n_layers = 4
         #shuffledTrainData, shuffledTrainLabels, shuffledValidData, shuffledValidLabels = an.splitDataNN(3, data3classes, target)
         #data3classes
@@ -66,16 +66,16 @@ def labo_APP2():
         ClassificationData.getStats(data3classes)
 
 
-    if False:  # TODO L3.E2
+    if True:  # TODO L3.E2
         # Exemples de ppv avec ou sans k-moy
         # 1-PPV avec comme représentants de classes l'ensemble des points déjà classés
-        ppv1 = classifiers.PPVClassify_APP2(data2train=data3classes, n_neighbors=1,
-                                            experiment_title='1-PPV avec données orig comme représentants',
-                                            gen_output=True, view=True)
-
-        ppv5 = classifiers.PPVClassify_APP2(data2train=data3classes, n_neighbors=5,
-                                            experiment_title='5-PPV avec données orig comme représentants',
-                                            gen_output=True, view=True)
+        # ppv1 = classifiers.PPVClassify_APP2(data2train=data3classes, n_neighbors=1,
+        #                                     experiment_title='1-PPV avec données orig comme représentants',
+        #                                     gen_output=True, view=True)
+        #
+        # ppv5 = classifiers.PPVClassify_APP2(data2train=data3classes, n_neighbors=5,
+        #                                     experiment_title='5-PPV avec données orig comme représentants',
+        #                                     gen_output=True, view=True)
         # 1-mean sur chacune des classes
         # suivi d'un 1-PPV avec ces nouveaux représentants de classes
         ppv1km1 = classifiers.PPVClassify_APP2(data2train=data3classes, data2test=data3classes, n_neighbors=1,
@@ -83,7 +83,7 @@ def labo_APP2():
                                                useKmean=True, n_representants=9,
                                                gen_output=True, view=True)
 
-    if True:  # TODO L3.E3
+    if False:  # TODO L3.E3
         # Exemple de classification bayésienne
         apriori = [1/3,1/3,1/3]
         cost = [[0, 1, 1], [1, 0, 1], [1, 1, 0]] # le cost nous permet d'avoir du control sur les frontières.
